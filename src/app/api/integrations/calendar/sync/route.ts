@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
@@ -48,7 +50,7 @@ export async function POST(req: Request) {
         },
       })
 
-      await prisma.calendarSyncEvents.create({ data: { source: 'google', eventId: ev.id, status: 'synced', payload: JSON.stringify(ev) } })
+      await prisma.calendarSyncEvent.create({ data: { source: 'google', eventId: ev.id, status: 'synced', payload: JSON.stringify(ev) } })
     }
 
     return NextResponse.json({ ok: true })
