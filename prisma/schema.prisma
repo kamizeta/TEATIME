@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum AttendanceStatus {
+  attended
+  absent
+  late
+  no_show
+}
+
+enum ClassStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+}
+
+enum ClassEnrollmentStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  RETRY
+  FAILED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  phoneE164 String?
+  role      UserRole @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teacherProfile        Teacher?
+  studentProfile        Student?
+  attendanceMarks       AttendanceRecord[]
+  instructorAttendances InstructorAttendance[]
+  cancellations         Cancellation[]
+  auditLogs             AuditLog[]
+}
+
+model Teacher {
+  id       String @id @default(cuid())
+  userId   String @unique
+  timezone String @default("America/Bogota")
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  classEvents ClassEvent[]
+}
+
+model Student {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  studentCode String  @unique
+  notes       String?
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  packages    HourPackage[]
+  enrollments ClassEnrollment[]
+  attendances AttendanceRecord[]
+}
+
+model HourPackage {
+  id         String   @id @default(cuid())
+  studentId  String
+  totalHours Int
+  usedHours  Int      @default(0)
+  validFrom  DateTime
+  validTo    DateTime
+  status     String   @default("ACTIVE")
+
+  student     Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  enrollments ClassEnrollment[]
+}
+
+model ClassEvent {
+  id            String      @id @default(cuid())
+  googleEventId String?     @unique
+  title         String
+  startAt       DateTime
+  endAt         DateTime
+  timezone      String      @default("America/Bogota")
+  meetUrl       String?
+  status        ClassStatus @default(SCHEDULED)
+  teacherId     String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  teacher              Teacher               @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  enrollments          ClassEnrollment[]
+  instructorAttendance InstructorAttendance?
+  attendanceRecords    AttendanceRecord[]
+  cancellations        Cancellation[]
+}
+
+model ClassEnrollment {
+  id           String                @id @default(cuid())
+  classEventId String
+  studentId    String
+  packageId    String
+  status       ClassEnrollmentStatus @default(CONFIRMED)
+
+  classEvent ClassEvent        @relation(fields: [classEventId], references: [id], onDelete: Cascade)
+  student    Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  package    HourPackage       @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  attendance AttendanceRecord?
+
+  @@unique([classEventId, studentId])
+}
+
+model AttendanceRecord {
+  id           String           @id @default(cuid())
+  classEventId String
+  studentId    String
+  status       AttendanceStatus
+  markedBy     String
+  markedAt     DateTime         @default(now())
+
+  classEvent ClassEvent      @relation(fields: [classEventId], references: [id], onDelete: Cascade)
+  student    Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  marker     User            @relation(fields: [markedBy], references: [id], onDelete: Cascade)
+  enrollment ClassEnrollment @relation(fields: [classEventId, studentId], references: [classEventId, studentId], onDelete: Cascade)
+
+  @@unique([classEventId, studentId])
+}
+
+model InstructorAttendance {
+  id           String   @id @default(cuid())
+  classEventId String   @unique
+  instructorId String
+  present      Boolean  @default(false)
+  markedAt     DateTime @default(now())
+
+  classEvent ClassEvent @relation(fields: [classEventId], references: [id], onDelete: Cascade)
+  instructor User       @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+}
+
+model Cancellation {
+  id           String   @id @default(cuid())
+  classEventId String
+  requestedBy  String
+  requestTime  DateTime @default(now())
+  reason       String
+  wasAllowed   Boolean
+  graceHours   Int
+
+  classEvent ClassEvent @relation(fields: [classEventId], references: [id], onDelete: Cascade)
+  requester  User       @relation(fields: [requestedBy], references: [id], onDelete: Cascade)
+}
+
+model NotificationAttempt {
+  id         String             @id @default(cuid())
+  targetType String
+  targetId   String
+  channel    String
+  status     NotificationStatus @default(PENDING)
+  providerId String?
+  payload    String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+}
+
+model CalendarSyncEvent {
+  id       String   @id @default(cuid())
+  source   String
+  eventId  String
+  status   String
+  payload  String
+  syncedAt DateTime @default(now())
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  before     String?
+  after      String?
+  createdAt  DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Cascade)
+}
