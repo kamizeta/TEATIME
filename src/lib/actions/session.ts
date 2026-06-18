@@ -1,7 +1,7 @@
 'use server'
 
 import { z } from 'zod'
-import { createSession, clearSession, verifyPassword } from '@/lib/auth'
+import { createSession, verifyPassword } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 const LoginSchema = z.object({
@@ -15,6 +15,10 @@ export async function loginAction(formData: FormData) {
     password: String(formData.get('password') || ''),
   })
 
+  if (!process.env.DATABASE_URL) {
+    return { ok: false, error: 'No hay DATABASE_URL configurado. Revisa el .env' }
+  }
+
   const user = await prisma.user.findUnique({ where: { email: parsed.email.toLowerCase() } })
   if (!user) return { ok: false, error: 'Credenciales inválidas' }
 
@@ -26,6 +30,7 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function logoutAction() {
+  const { clearSession } = await import('@/lib/auth')
   await clearSession()
   return { ok: true }
 }
