@@ -3,8 +3,13 @@ export const dynamic = "force-dynamic"
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
+import { submitCancellationAction } from '@/lib/actions'
 
-export default async function TeacherDashboard() {
+export default async function TeacherDashboard({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>
+}) {
   const session = await getSession()
   if (!session || session.role !== 'TEACHER') return <p>Sin sesión docente</p>
 
@@ -31,6 +36,15 @@ export default async function TeacherDashboard() {
         </div>
       </section>
 
+      {searchParams?.cancel === 'ok' ? (
+        <p className="status-success">Clase cancelada. El saldo reservado ya fue liberado.</p>
+      ) : null}
+      {searchParams?.cancel === 'denied' ? (
+        <p className="status-warning">
+          No puedes cancelar fuera de la ventana mínima de {searchParams?.hours || '6'} horas.
+        </p>
+      ) : null}
+
       <section className="panel table-panel">
         <div className="card-header">
           <p className="eyebrow">Agenda</p>
@@ -43,6 +57,8 @@ export default async function TeacherDashboard() {
                 <th>Hora</th>
                 <th>Clase</th>
                 <th>Alumnos</th>
+                <th>Estado</th>
+                <th>Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -51,6 +67,24 @@ export default async function TeacherDashboard() {
                   <td>{new Date(c.startAt).toLocaleString('es-CO')}</td>
                   <td>{c.title}</td>
                   <td>{c.enrollments.map((enrollment) => enrollment.student.user.name).join(', ')}</td>
+                  <td><span className="status-pill">{c.status}</span></td>
+                  <td>
+                    {c.status === 'CANCELED' || c.status === 'COMPLETED' ? (
+                      <span className="muted">Sin acción</span>
+                    ) : (
+                      <form action={submitCancellationAction}>
+                        <input type="hidden" name="classId" value={c.id} />
+                        <input type="hidden" name="scope" value="CLASS" />
+                        <input type="hidden" name="redirectPath" value="/teacher/today" />
+                        <input
+                          type="hidden"
+                          name="reason"
+                          value="Clase cancelada por el profesor desde su agenda operativa."
+                        />
+                        <button type="submit" className="button-ghost">Cancelar clase</button>
+                      </form>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
