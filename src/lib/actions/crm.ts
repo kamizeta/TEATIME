@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { ContactSource, ContactStatus, NotificationStatus } from '@prisma/client'
-import { requireRole } from '@/lib/auth'
+import { ContactSource, ContactStatus, CrmActivityStatus, CrmActivityType, NotificationStatus, UserRole } from '@prisma/client'
+import { hashPassword, requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 function withQuery(path: string, entries: Record<string, string>) {
@@ -28,7 +28,11 @@ export async function createCrmContactAction(formData: FormData) {
   const preferredLanguage = String(formData.get('preferredLanguage') || 'es').trim() || 'es'
   const source = getEnumValue(ContactSource, formData.get('source'), ContactSource.WHATSAPP)
   const status = getEnumValue(ContactStatus, formData.get('status'), ContactStatus.NEW)
+  const interestProgram = String(formData.get('interestProgram') || '').trim()
+  const level = String(formData.get('level') || '').trim()
+  const nextFollowUpAtRaw = String(formData.get('nextFollowUpAt') || '')
   const notes = String(formData.get('notes') || '').trim()
+  const nextFollowUpAt = nextFollowUpAtRaw ? new Date(nextFollowUpAtRaw) : null
 
   if (!fullName || (!email && !phoneE164)) {
     redirect(withQuery(redirectPath, { crm: 'error', code: 'MISSING_CONTACT_FIELDS' }))
@@ -42,6 +46,9 @@ export async function createCrmContactAction(formData: FormData) {
       preferredLanguage,
       source,
       status,
+      interestProgram: interestProgram || null,
+      level: level || null,
+      nextFollowUpAt: nextFollowUpAt && !isNaN(nextFollowUpAt.getTime()) ? nextFollowUpAt : null,
       notes: notes || null,
       ownerId: session.userId,
     },
@@ -59,6 +66,208 @@ export async function createCrmContactAction(formData: FormData) {
 
   revalidatePath('/admin/crm')
   redirect(withQuery(redirectPath, { crm: 'created' }))
+}
+
+export async function createCrmActivityAction(formData: FormData) {
+  const session = await requireRole(['ADMIN', 'STAFF'])
+  const contactId = String(formData.get('contactId') || '')
+  const redirectPath = String(formData.get('redirectPath') || `/admin/crm/${contactId}`)
+  const type = getEnumValue(CrmActivityType, formData.get('type'), CrmActivityType.NOTE)
+  const title = String(formData.get('title') || '').trim()
+  const body = String(formData.get('body') || '').trim()
+  const dueAtRaw = String(formData.get('dueAt') || '')
+  const dueAt = dueAtRaw ? new Date(dueAtRaw) : null
+
+  if (!contactId || !title) {
+    redirect(withQuery(redirectPath, { crm: 'error', code: 'MISSING_ACTIVITY_FIELDS' }))
+  }
+
+  const contact = await prisma.crmContact.findUnique({ where: { id: contactId } })
+  if (!contact) {
+    redirect(withQuery(redirectPath, { crm: 'error', code: 'CONTACT_NOT_FOUND' }))
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.crmActivity.create({
+      data: {
+        contactId,
+        actorId: session.userId,
+        type,
+        status: type === CrmActivityType.NOTE ? CrmActivityStatus.DONE : CrmActivityStatus.OPEN,
+        title,
+        body: body || null,
+        dueAt: dueAt && !isNaN(dueAt.getTime()) ? dueAt : null,
+        completedAt: type === CrmActivityType.NOTE ? new Date() : null,
+      },
+    })
+    await tx.crmContact.update({
+      where: { id: contactId },
+      data: {
+        status: type === CrmActivityType.TRIAL_CLASS ? ContactStatus.TRIAL_SCHEDULED : contact.status,
+        nextFollowUpAt:
+          dueAt && !isNaN(dueAt.getTime()) && type !== CrmActivityType.NOTE ? dueAt : contact.nextFollowUpAt,
+      },
+    })
+    await tx.auditLog.create({
+      data: {
+        actorId: session.userId,
+        action: 'CRM_ACTIVITY_CREATED',
+        entityType: 'CRM_CONTACT',
+        entityId: contactId,
+        after: JSON.stringify({ type, title, dueAt: dueAt?.toISOString() }),
+      },
+    })
+  })
+
+  revalidatePath('/admin/crm')
+  revalidatePath(`/admin/crm/${contactId}`)
+  redirect(withQuery(redirectPath, { crm: 'activity_created' }))
+}
+
+export async function completeCrmActivityAction(formData: FormData) {
+  const session = await requireRole(['ADMIN', 'STAFF'])
+  const activityId = String(formData.get('activityId') || '')
+  const contactId = String(formData.get('contactId') || '')
+  const redirectPath = String(formData.get('redirectPath') || `/admin/crm/${contactId}`)
+
+  if (!activityId || !contactId) {
+    redirect(withQuery(redirectPath, { crm: 'error', code: 'MISSING_ACTIVITY_ID' }))
+  }
+
+  const activity = await prisma.crmActivity.findUnique({ where: { id: activityId } })
+  if (!activity) {
+    redirect(withQuery(redirectPath, { crm: 'error', code: 'ACTIVITY_NOT_FOUND' }))
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.crmActivity.update({
+      where: { id: activityId },
+      data: { status: CrmActivityStatus.DONE, completedAt: new Date() },
+    })
+    await tx.auditLog.create({
+      data: {
+        actorId: session.userId,
+        action: 'CRM_ACTIVITY_COMPLETED',
+        entityType: 'CRM_ACTIVITY',
+        entityId: activityId,
+        before: JSON.stringify({ status: activity.status }),
+        after: JSON.stringify({ status: CrmActivityStatus.DONE }),
+      },
+    })
+  })
+
+  revalidatePath('/admin/crm')
+  revalidatePath(`/admin/crm/${contactId}`)
+  redirect(withQuery(redirectPath, { crm: 'activity_completed' }))
+}
+
+export async function convertCrmContactToStudentAction(formData: FormData) {
+  const session = await requireRole(['ADMIN', 'STAFF'])
+  const contactId = String(formData.get('contactId') || '')
+  const redirectPath = String(formData.get('redirectPath') || `/admin/crm/${contactId}`)
+  const teacherId = String(formData.get('teacherId') || '')
+  const totalMinutes = Number(formData.get('totalMinutes') || 1200)
+  const validToRaw = String(formData.get('validTo') || '')
+
+  if (!contactId || !teacherId || totalMinutes <= 0 || !validToRaw) {
+    redirect(withQuery(redirectPath, { crm: 'error', code: 'MISSING_CONVERSION_FIELDS' }))
+  }
+
+  const validTo = new Date(validToRaw)
+  if (isNaN(validTo.getTime())) {
+    redirect(withQuery(redirectPath, { crm: 'error', code: 'INVALID_VALID_TO' }))
+  }
+
+  const contact = await prisma.crmContact.findUnique({ where: { id: contactId } })
+  const teacher = await prisma.teacher.findUnique({ where: { id: teacherId } })
+  if (!contact || !teacher) {
+    redirect(withQuery(redirectPath, { crm: 'error', code: 'RELATED_ENTITY_NOT_FOUND' }))
+  }
+  if (contact.convertedStudentId) {
+    redirect(withQuery(redirectPath, { crm: 'error', code: 'CONTACT_ALREADY_CONVERTED' }))
+  }
+  if (!contact.email) {
+    redirect(withQuery(redirectPath, { crm: 'error', code: 'CONTACT_EMAIL_REQUIRED' }))
+  }
+
+  const existingUser = await prisma.user.findUnique({ where: { email: contact.email } })
+  if (existingUser) {
+    redirect(withQuery(redirectPath, { crm: 'error', code: 'EMAIL_ALREADY_EXISTS' }))
+  }
+
+  const password = await hashPassword('alumno123')
+  const studentCode = `STU-${String((await prisma.student.count()) + 1).padStart(3, '0')}`
+
+  const student = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        email: contact.email!,
+        password,
+        name: contact.fullName,
+        phoneE164: contact.phoneE164,
+        role: UserRole.STUDENT,
+      },
+    })
+    const createdStudent = await tx.student.create({
+      data: {
+        userId: user.id,
+        studentCode,
+        notes: contact.notes || `Convertido desde CRM ${contact.id}`,
+      },
+    })
+    await tx.hourPackage.create({
+      data: {
+        studentId: createdStudent.id,
+        totalHours: Math.ceil(totalMinutes / 60),
+        totalMinutes,
+        validFrom: new Date(),
+        validTo,
+        status: 'ACTIVE',
+        allowedClassTypes: 'ONE_ON_ONE,GROUP',
+        allowedDurations: '50,60,90',
+      },
+    })
+    await tx.studentTeacherAssignment.create({
+      data: {
+        studentId: createdStudent.id,
+        teacherId,
+        assignedByUserId: session.userId,
+        isPrimary: true,
+        notes: 'Asignado al convertir desde CRM',
+      },
+    })
+    await tx.crmContact.update({
+      where: { id: contactId },
+      data: { status: ContactStatus.ACTIVE_STUDENT, convertedStudentId: createdStudent.id },
+    })
+    await tx.crmActivity.create({
+      data: {
+        contactId,
+        actorId: session.userId,
+        type: CrmActivityType.NOTE,
+        status: CrmActivityStatus.DONE,
+        title: 'Convertido a alumno',
+        body: `Usuario creado con contraseña temporal alumno123. Código: ${studentCode}.`,
+        completedAt: new Date(),
+      },
+    })
+    await tx.auditLog.create({
+      data: {
+        actorId: session.userId,
+        action: 'CRM_CONTACT_CONVERTED_TO_STUDENT',
+        entityType: 'CRM_CONTACT',
+        entityId: contactId,
+        after: JSON.stringify({ studentId: createdStudent.id, teacherId, totalMinutes }),
+      },
+    })
+    return createdStudent
+  })
+
+  revalidatePath('/admin/crm')
+  revalidatePath(`/admin/crm/${contactId}`)
+  revalidatePath('/admin/students')
+  revalidatePath('/admin/packages')
+  redirect(withQuery(`/admin/students?highlight=${student.id}`, { crm: 'converted' }))
 }
 
 export async function updateCrmContactStatusAction(formData: FormData) {

@@ -66,6 +66,21 @@ enum ContactSource {
   OTHER
 }
 
+enum CrmActivityType {
+  NOTE
+  WHATSAPP
+  CALL
+  EMAIL
+  FOLLOW_UP
+  TRIAL_CLASS
+}
+
+enum CrmActivityStatus {
+  OPEN
+  DONE
+  CANCELED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -85,6 +100,7 @@ model User {
   bookedClasses         ClassEvent[]               @relation("ClassBookedBy")
   assignmentActions     StudentTeacherAssignment[] @relation("AssignmentCreatedBy")
   ownedCrmContacts      CrmContact[]               @relation("CrmContactOwner")
+  crmActivities         CrmActivity[]
 }
 
 model Teacher {
@@ -121,6 +137,9 @@ model CrmContact {
   preferredLanguage String        @default("es")
   source            ContactSource @default(MANUAL)
   status            ContactStatus @default(NEW)
+  interestProgram   String?
+  level             String?
+  nextFollowUpAt    DateTime?
   notes             String?
   ownerId           String?
   convertedStudentId String?
@@ -129,9 +148,31 @@ model CrmContact {
 
   owner            User?    @relation("CrmContactOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   convertedStudent Student? @relation(fields: [convertedStudentId], references: [id], onDelete: SetNull)
+  activities       CrmActivity[]
 
   @@index([status, createdAt])
+  @@index([nextFollowUpAt])
   @@index([ownerId])
+}
+
+model CrmActivity {
+  id          String            @id @default(cuid())
+  contactId   String
+  actorId     String
+  type        CrmActivityType   @default(NOTE)
+  status      CrmActivityStatus @default(OPEN)
+  title       String
+  body        String?
+  dueAt       DateTime?
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  contact CrmContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  actor   User       @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([contactId, createdAt])
+  @@index([status, dueAt])
 }
 
 model StudentTeacherAssignment {

@@ -1,4 +1,12 @@
-import { ContactSource, ContactStatus, NotificationStatus, PrismaClient, UserRole } from '@prisma/client'
+import {
+  ContactSource,
+  ContactStatus,
+  CrmActivityStatus,
+  CrmActivityType,
+  NotificationStatus,
+  PrismaClient,
+  UserRole,
+} from '@prisma/client'
 import bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
@@ -235,8 +243,23 @@ async function main() {
         preferredLanguage: 'es',
         source: ContactSource.WHATSAPP,
         status: ContactStatus.CONTACTED,
+        interestProgram: 'Inglés conversacional 1:1',
+        level: 'B1 estimado',
+        nextFollowUpAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         notes: 'Quiere clases de conversación. Disponible martes y jueves después de las 6pm.',
         ownerId: staffUser.id,
+      },
+    })
+
+    await prisma.crmActivity.create({
+      data: {
+        contactId: contact.id,
+        actorId: staffUser.id,
+        type: CrmActivityType.FOLLOW_UP,
+        status: CrmActivityStatus.OPEN,
+        title: 'Confirmar disponibilidad para clase demo',
+        body: 'Preguntar si prefiere martes o jueves después de las 6pm.',
+        dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     })
 

@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { ContactSource, ContactStatus } from '@prisma/client'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -27,6 +28,10 @@ function getCrmMessage(code: string) {
     MISSING_CONTACT_FIELDS: 'Falta nombre y al menos un email o teléfono.',
     MISSING_CONTACT_ID: 'Falta el contacto.',
     CONTACT_NOT_FOUND: 'El contacto no existe.',
+    MISSING_ACTIVITY_FIELDS: 'Falta título de la actividad.',
+    MISSING_CONVERSION_FIELDS: 'Faltan datos para convertir a alumno.',
+    CONTACT_EMAIL_REQUIRED: 'Para convertir a alumno se necesita email.',
+    EMAIL_ALREADY_EXISTS: 'Ya existe un usuario con ese email.',
   }
   return messages[code] || 'No se pudo completar la acción.'
 }
@@ -46,7 +51,7 @@ export default async function AdminCrmPage({
 
   const contacts = await prisma.crmContact.findMany({
     where: selectedStatus && selectedStatus in ContactStatus ? { status: selectedStatus as ContactStatus } : undefined,
-    include: { owner: { select: { name: true, email: true } } },
+    include: { owner: { select: { name: true, email: true } }, _count: { select: { activities: true } } },
     orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
     take: 80,
   })
@@ -132,6 +137,20 @@ export default async function AdminCrmPage({
                 <input id="preferredLanguage" name="preferredLanguage" className="input" defaultValue="es" />
               </div>
             </div>
+            <div className="form-grid three">
+              <div className="stack-xs">
+                <label htmlFor="interestProgram">Programa de interés</label>
+                <input id="interestProgram" name="interestProgram" className="input" placeholder="Inglés 1:1, grupal, conversación..." />
+              </div>
+              <div className="stack-xs">
+                <label htmlFor="level">Nivel estimado</label>
+                <input id="level" name="level" className="input" placeholder="A1, B2, principiante..." />
+              </div>
+              <div className="stack-xs">
+                <label htmlFor="nextFollowUpAt">Próximo seguimiento</label>
+                <input id="nextFollowUpAt" name="nextFollowUpAt" type="datetime-local" className="input" />
+              </div>
+            </div>
             <div className="stack-xs">
               <label htmlFor="notes">Notas</label>
               <textarea id="notes" name="notes" className="textarea" rows={4} placeholder="Necesidad, nivel, horario, objeciones..." />
@@ -173,6 +192,7 @@ export default async function AdminCrmPage({
                 <th>Contacto</th>
                 <th>Estado</th>
                 <th>Origen</th>
+                <th>Interés</th>
                 <th>Responsable</th>
                 <th>Seguimiento</th>
               </tr>
@@ -181,7 +201,9 @@ export default async function AdminCrmPage({
               {contacts.map((contact) => (
                 <tr key={contact.id}>
                   <td>
-                    <strong>{contact.fullName}</strong>
+                    <Link href={`/admin/crm/${contact.id}`} className="text-link">
+                      <strong>{contact.fullName}</strong>
+                    </Link>
                     <small className="block-muted">
                       {contact.phoneE164 || 'Sin teléfono'} · {contact.email || 'Sin email'}
                     </small>
@@ -189,6 +211,15 @@ export default async function AdminCrmPage({
                   </td>
                   <td>{statusLabels[contact.status]}</td>
                   <td>{sourceLabels[contact.source]}</td>
+                  <td>
+                    {contact.interestProgram || 'Sin programa'}
+                    <small className="block-muted">
+                      {contact.level || 'Nivel sin definir'} · {contact._count.activities} actividades
+                    </small>
+                    {contact.nextFollowUpAt ? (
+                      <small className="block-muted">Próximo: {contact.nextFollowUpAt.toLocaleString('es-CO')}</small>
+                    ) : null}
+                  </td>
                   <td>{contact.owner?.name || 'Sin responsable'}</td>
                   <td>
                     <div className="row-actions">
@@ -227,7 +258,7 @@ export default async function AdminCrmPage({
               ))}
               {!contacts.length ? (
                 <tr>
-                  <td colSpan={5}>No hay contactos en este filtro.</td>
+                  <td colSpan={6}>No hay contactos en este filtro.</td>
                 </tr>
               ) : null}
             </tbody>

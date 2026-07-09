@@ -38,6 +38,13 @@ a {
   text-decoration: none;
 }
 
+.text-link {
+  color: var(--secondary);
+  text-decoration: underline;
+  text-decoration-color: rgba(62, 91, 116, 0.28);
+  text-underline-offset: 3px;
+}
+
 button,
 input,
 select,
@@ -254,6 +261,23 @@ h3 {
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
 }
 
 .eyebrow {
