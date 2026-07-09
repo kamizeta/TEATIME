@@ -34,11 +34,11 @@ export default function LoginPage() {
   return (
     <div className="auth-shell">
       <section className="auth-hero">
-        <p className="eyebrow">TEATIME Ops</p>
-        <h1>La operación académica deja de vivir en memoria, chats y Excel.</h1>
+        <p className="eyebrow">Operación TEATIME</p>
+        <h1>Agenda, reservas y asistencia en una sola operación.</h1>
         <p className="hero-copy">
-          Esta base ya está alineada con el producto aprobado: roles reales, staff operativo, rutas nuevas y una
-          experiencia inicial mucho más cercana a TEATIME.
+          Este MVP ya separa roles, disponibilidad, reservas y control de saldo. La siguiente capa es la
+          sincronización operativa con Google Calendar y Meet sin depender de hojas manuales.
         </p>
         <div className="demo-grid">
           {demoUsers.map((user) => (
@@ -64,6 +64,7 @@ export default function LoginPage() {
         <div className="card-header">
           <p className="eyebrow">Acceso</p>
           <h2>Inicia sesión</h2>
+          <p className="muted">Usa un demo rápido o entra con tu usuario real cuando conectemos la cuenta oficial.</p>
         </div>
         <form onSubmit={onSubmit} className="stack-md">
           <div className="stack-xs">
