@@ -19,8 +19,12 @@ export function getNavigationForRole(role: AppRole): NavItem[] {
       { href: '/admin/calendar', label: 'Calendario', description: 'Clases, slots y agenda' },
       { href: '/admin/students', label: 'Alumnos', description: 'Asignación de profesor y paquetes' },
       { href: '/admin/crm', label: 'CRM', description: 'Prospectos, WhatsApp y seguimiento' },
+      { href: '/admin/incidents', label: 'Incidencias', description: 'Problemas y resolución operativa' },
+      { href: '/admin/weekly-closing', label: 'Cierre semanal', description: 'Reemplazo operativo del Excel' },
       { href: '/admin/packages', label: 'Paquetes', description: 'Saldo y movimientos' },
       { href: '/admin/notifications', label: 'Notificaciones', description: 'Mensajes pendientes y reintentos' },
+      { href: '/admin/templates', label: 'Plantillas', description: 'Mensajes base por canal' },
+      { href: '/admin/users', label: 'Usuarios', description: 'Roles, accesos y permisos' },
       { href: '/admin/reports', label: 'Reportes', description: 'Cierre semanal y exportes' },
       { href: '/admin/settings', label: 'Ajustes', description: 'Reglas, políticas y configuración' },
     ]

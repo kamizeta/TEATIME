@@ -21,6 +21,7 @@ export async function loginAction(formData: FormData) {
 
   const user = await prisma.user.findUnique({ where: { email: parsed.email.toLowerCase() } })
   if (!user) return { ok: false, error: 'Credenciales inválidas' }
+  if (!user.isActive) return { ok: false, error: 'Usuario inactivo. Contacta al administrador.' }
 
   const isMatch = await verifyPassword(parsed.password, user.password)
   if (!isMatch) return { ok: false, error: 'Credenciales inválidas' }

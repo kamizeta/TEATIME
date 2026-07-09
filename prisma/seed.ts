@@ -3,6 +3,9 @@ import {
   ContactStatus,
   CrmActivityStatus,
   CrmActivityType,
+  IncidentSeverity,
+  IncidentType,
+  MessageTemplateChannel,
   NotificationStatus,
   PrismaClient,
   UserRole,
@@ -67,6 +70,12 @@ async function main() {
       role: UserRole.STUDENT,
       phoneE164: '+573001234569'
     }
+  })
+
+  await prisma.staffPermission.upsert({
+    where: { userId: staffUser.id },
+    update: { canCloseWeeks: true, canResolveIncidents: true },
+    create: { userId: staffUser.id, canCloseWeeks: true, canResolveIncidents: true },
   })
 
   const teacher = await prisma.teacher.upsert({
@@ -227,11 +236,61 @@ async function main() {
     },
   })
 
+  const existingIncident = await prisma.incident.findFirst({ where: { title: 'Demo: confirmar cierre de clase' } })
+  if (!existingIncident) {
+    await prisma.incident.create({
+      data: {
+        title: 'Demo: confirmar cierre de clase',
+        description: 'Incidencia de ejemplo para probar el flujo de cierre semanal.',
+        type: IncidentType.MISSING_ATTENDANCE,
+        severity: IncidentSeverity.MEDIUM,
+        classEventId: classEvent.id,
+        reportedById: staffUser.id,
+        assignedToId: staffUser.id,
+      },
+    })
+  }
+
   await prisma.setting.upsert({
     where: { key: 'CANCEL_GRACE_HOURS' },
     update: { value: '6' },
     create: { key: 'CANCEL_GRACE_HOURS', value: '6' },
   })
+
+  const defaultTemplates = [
+    {
+      key: 'booking_confirmation',
+      name: 'Confirmación de clase',
+      channel: MessageTemplateChannel.WHATSAPP,
+      body: 'Hola {{student_name}}, tu clase con {{teacher_name}} quedó agendada para {{class_time}}. Enlace: {{meet_url}}',
+    },
+    {
+      key: 'late_cancellation',
+      name: 'Cancelación tardía',
+      channel: MessageTemplateChannel.WHATSAPP,
+      body: 'Hola {{student_name}}, recibimos tu cancelación fuera de la ventana permitida. La clase puede descontarse según política TEATIME.',
+    },
+    {
+      key: 'crm_follow_up',
+      name: 'Seguimiento comercial',
+      channel: MessageTemplateChannel.WHATSAPP,
+      body: 'Hola {{contact_name}}, soy de TEATIME Academy. ¿Quieres que coordinemos tu clase demo o resolvemos alguna duda?',
+    },
+    {
+      key: 'post_trial',
+      name: 'Post demo',
+      channel: MessageTemplateChannel.WHATSAPP,
+      body: 'Hola {{contact_name}}, gracias por tu clase demo. Podemos ayudarte a escoger paquete y horario para empezar.',
+    },
+  ]
+
+  for (const template of defaultTemplates) {
+    await prisma.messageTemplate.upsert({
+      where: { key: template.key },
+      update: { name: template.name, channel: template.channel, body: template.body, updatedByUserId: adminUser.id },
+      create: { ...template, language: 'es', updatedByUserId: adminUser.id },
+    })
+  }
 
   const existingCrmContacts = await prisma.crmContact.count()
   if (!existingCrmContacts) {

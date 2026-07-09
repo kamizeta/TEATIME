@@ -32,6 +32,28 @@ export default async function AdminDashboard({
   })
 
   const pending = await prisma.attendanceRecord.count({ where: { status: 'no_show' } })
+  const openIncidents = await prisma.incident.count({ where: { status: { in: ['OPEN', 'IN_REVIEW'] } } })
+  const pendingNotifications = await prisma.notificationAttempt.count({ where: { status: { in: ['PENDING', 'RETRY'] } } })
+  const overdueCrm = await prisma.crmActivity.count({
+    where: {
+      status: 'OPEN',
+      dueAt: { lte: new Date() },
+    },
+  })
+  const pastClassesWithoutTeacherClose = await prisma.classEvent.count({
+    where: {
+      endAt: { lt: new Date() },
+      status: { not: 'CANCELED' },
+      instructorAttendance: null,
+    },
+  })
+  const upcomingClassesWithoutMeet = await prisma.classEvent.count({
+    where: {
+      startAt: { gte: new Date(), lte: new Date(Date.now() + 48 * 60 * 60 * 1000) },
+      status: { in: ['SCHEDULED', 'RESERVED'] },
+      OR: [{ meetUrl: null }, { meetUrl: '' }],
+    },
+  })
   const studentsWithoutTeacher = await prisma.student.count({
     where: {
       teacherAssignments: {
@@ -98,6 +120,8 @@ export default async function AdminDashboard({
         </p>
         <div className="toolbar">
           <Link href="/admin/calendar" className="button-primary">Ver calendario</Link>
+          <Link href="/admin/weekly-closing" className="button-ghost">Cierre semanal</Link>
+          <Link href="/admin/incidents" className="button-ghost">Incidencias</Link>
           <Link href="/admin/reports" className="button-ghost">Abrir reportes</Link>
           <Link href="/admin/packages" className="button-ghost">Abrir ledger</Link>
         </div>
@@ -117,7 +141,7 @@ export default async function AdminDashboard({
         </article>
         <article className="kpi-card">
           <span className="muted">Casos pendientes</span>
-          <strong>{pending}</strong>
+          <strong>{pending + openIncidents + pendingNotifications + overdueCrm + pastClassesWithoutTeacherClose}</strong>
         </article>
       </section>
 
@@ -134,6 +158,35 @@ export default async function AdminDashboard({
           <span className="muted">Cancelaciones rechazadas</span>
           <strong>{recentDeniedCancellations.length}</strong>
         </article>
+      </section>
+
+      <section className="panel">
+        <div className="card-header">
+          <p className="eyebrow">Alertas operativas</p>
+          <h2>Lo que hay que atacar primero</h2>
+        </div>
+        <div className="alert-grid">
+          <Link href="/admin/incidents" className="alert-card">
+            <strong>{openIncidents}</strong>
+            <span>Incidencias abiertas/en revisión</span>
+          </Link>
+          <Link href="/admin/weekly-closing" className="alert-card">
+            <strong>{pastClassesWithoutTeacherClose}</strong>
+            <span>Clases pasadas sin cierre profesor</span>
+          </Link>
+          <Link href="/admin/crm" className="alert-card">
+            <strong>{overdueCrm}</strong>
+            <span>Seguimientos CRM vencidos</span>
+          </Link>
+          <Link href="/admin/notifications" className="alert-card">
+            <strong>{pendingNotifications}</strong>
+            <span>Notificaciones pendientes/reintento</span>
+          </Link>
+          <Link href="/admin/calendar" className="alert-card">
+            <strong>{upcomingClassesWithoutMeet}</strong>
+            <span>Clases próximas sin Meet</span>
+          </Link>
+        </div>
       </section>
 
       <section className="ops-grid">
