@@ -1,45 +1,43 @@
-'use client'
-
 export const dynamic = 'force-dynamic'
 
-import { FormEvent, useState } from 'react'
+import { notFound } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
+import AttendanceClient from './attendance-client'
 
-export default function AttendancePage({ params }: { params: { id: string } }) {
-  const [studentId, setStudentId] = useState('')
-  const [status, setStatus] = useState('attended')
-  const [msg, setMsg] = useState('')
+export default async function AttendancePage({ params }: { params: { id: string } }) {
+  const classEvent = await prisma.classEvent.findUnique({
+    where: { id: params.id },
+    include: {
+      enrollments: {
+        include: {
+          student: { include: { user: true } },
+          attendance: true,
+        },
+      },
+    },
+  })
 
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    const resp = await fetch(`/api/classes/${params.id}/attendance`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ studentId, status }),
-      credentials: 'include',
-    })
-
-    const json = await resp.json()
-    if (json.ok) {
-      setMsg('Guardado')
-      setStudentId('')
-    } else {
-      setMsg(json.error || 'Error')
-    }
-  }
+  if (!classEvent) return notFound()
 
   return (
-    <form onSubmit={onSubmit}>
-      <h1>Marcar asistencia</h1>
-      <p>ID de matrícula del alumno</p>
-      <input value={studentId} onChange={(e) => setStudentId(e.target.value)} required />
-      <select value={status} onChange={(e) => setStatus(e.target.value)}>
-        <option value="attended">Asistió</option>
-        <option value="absent">Ausente</option>
-        <option value="late">Tardanza</option>
-        <option value="no_show">No_show</option>
-      </select>
-      <button>Guardar</button>
-      <p>{msg}</p>
-    </form>
+    <div className="page-stack">
+      <section className="hero">
+        <p className="eyebrow">Attendance</p>
+        <h1 className="page-title">Registrar asistencia</h1>
+        <p className="page-lead">
+          Marca la asistencia sin usar IDs manuales. Esto ya está conectado al cierre real de saldo.
+        </p>
+      </section>
+
+      <AttendanceClient
+        classId={classEvent.id}
+        title={classEvent.title}
+        rows={classEvent.enrollments.map((enrollment) => ({
+          studentId: enrollment.studentId,
+          studentName: enrollment.student.user.name,
+          status: enrollment.attendance?.status || 'pending',
+        }))}
+      />
+    </div>
   )
 }

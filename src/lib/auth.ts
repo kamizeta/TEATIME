@@ -2,10 +2,11 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcrypt'
 import { prisma } from '@/lib/prisma'
+import type { AppRole } from '@/lib/navigation'
 
 type SessionPayload = {
   userId: string
-  role: 'ADMIN' | 'TEACHER' | 'STUDENT'
+  role: AppRole
 }
 
 const COOKIE_NAME = 'asistencia_session'
@@ -20,7 +21,7 @@ export async function hashPassword(password: string) {
   return bcrypt.hash(password, 10)
 }
 
-export async function createSession(userId: string, role: 'ADMIN' | 'TEACHER' | 'STUDENT') {
+export async function createSession(userId: string, role: AppRole) {
   const token = await new SignJWT({ userId, role } as SessionPayload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -52,7 +53,7 @@ export async function getSession() {
   }
 }
 
-export async function requireRole(roles: Array<'ADMIN' | 'TEACHER' | 'STUDENT'>) {
+export async function requireRole(roles: AppRole[]) {
   const session = await getSession()
   if (!session || !roles.includes(session.role)) {
     throw new Error('UNAUTHORIZED')

@@ -9,6 +9,7 @@ datasource db {
 
 enum UserRole {
   ADMIN
+  STAFF
   TEACHER
   STUDENT
 }
@@ -22,8 +23,19 @@ enum AttendanceStatus {
 
 enum ClassStatus {
   SCHEDULED
+  RESERVED
   COMPLETED
   CANCELED
+}
+
+enum ClassType {
+  ONE_ON_ONE
+  GROUP
+}
+
+enum AvailabilityExceptionType {
+  UNAVAILABLE
+  AVAILABLE
 }
 
 enum ClassEnrollmentStatus {
@@ -54,6 +66,8 @@ model User {
   instructorAttendances InstructorAttendance[]
   cancellations         Cancellation[]
   auditLogs             AuditLog[]
+  bookedClasses         ClassEvent[]               @relation("ClassBookedBy")
+  assignmentActions     StudentTeacherAssignment[] @relation("AssignmentCreatedBy")
 }
 
 model Teacher {
@@ -62,7 +76,10 @@ model Teacher {
   timezone String @default("America/Bogota")
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  classEvents ClassEvent[]
+  classEvents             ClassEvent[]
+  studentAssignments      StudentTeacherAssignment[]
+  availabilityBlocks      TeacherAvailabilityBlock[]
+  availabilityExceptions  TeacherAvailabilityException[]
 }
 
 model Student {
@@ -75,6 +92,26 @@ model Student {
   packages    HourPackage[]
   enrollments ClassEnrollment[]
   attendances AttendanceRecord[]
+  teacherAssignments StudentTeacherAssignment[]
+}
+
+model StudentTeacherAssignment {
+  id               String   @id @default(cuid())
+  studentId        String
+  teacherId        String
+  assignedByUserId String
+  isPrimary        Boolean  @default(true)
+  startsAt         DateTime @default(now())
+  endsAt           DateTime?
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher    Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  assignedBy User    @relation("AssignmentCreatedBy", fields: [assignedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([teacherId, startsAt])
+  @@index([studentId, isPrimary])
 }
 
 model HourPackage {
@@ -82,9 +119,15 @@ model HourPackage {
   studentId  String
   totalHours Int
   usedHours  Int      @default(0)
+  reservedHours Int   @default(0)
+  totalMinutes Int    @default(1200)
+  usedMinutes  Int    @default(0)
+  reservedMinutes Int @default(0)
   validFrom  DateTime
   validTo    DateTime
   status     String   @default("ACTIVE")
+  allowedClassTypes String @default("ONE_ON_ONE,GROUP")
+  allowedDurations  String @default("50,60,90")
 
   student     Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
   enrollments ClassEnrollment[]
@@ -99,7 +142,12 @@ model ClassEvent {
   timezone      String      @default("America/Bogota")
   meetUrl       String?
   status        ClassStatus @default(SCHEDULED)
+  classType     ClassType   @default(ONE_ON_ONE)
+  durationMinutes Int       @default(60)
+  capacity      Int         @default(1)
   teacherId     String
+  bookedById    String?
+  bookingSource String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -108,6 +156,10 @@ model ClassEvent {
   instructorAttendance InstructorAttendance?
   attendanceRecords    AttendanceRecord[]
   cancellations        Cancellation[]
+  bookedBy             User?                 @relation("ClassBookedBy", fields: [bookedById], references: [id], onDelete: SetNull)
+
+  @@index([teacherId, startAt, endAt])
+  @@index([status, startAt])
 }
 
 model ClassEnrollment {
@@ -116,6 +168,10 @@ model ClassEnrollment {
   studentId    String
   packageId    String
   status       ClassEnrollmentStatus @default(CONFIRMED)
+  reservedHours Int                  @default(0)
+  consumedHours Int                  @default(0)
+  reservedMinutes Int                @default(0)
+  consumedMinutes Int                @default(0)
 
   classEvent ClassEvent        @relation(fields: [classEventId], references: [id], onDelete: Cascade)
   student    Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -163,6 +219,53 @@ model Cancellation {
 
   classEvent ClassEvent @relation(fields: [classEventId], references: [id], onDelete: Cascade)
   requester  User       @relation(fields: [requestedBy], references: [id], onDelete: Cascade)
+}
+
+model TeacherAvailabilityBlock {
+  id              String    @id @default(cuid())
+  teacherId       String
+  weekday         Int
+  startLocalTime  String
+  endLocalTime    String
+  timezone        String    @default("America/Bogota")
+  durationMinutes Int       @default(60)
+  classType       ClassType @default(ONE_ON_ONE)
+  capacity        Int       @default(1)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([teacherId, weekday, isActive])
+}
+
+model TeacherAvailabilityException {
+  id        String                    @id @default(cuid())
+  teacherId String
+  startsAt  DateTime
+  endsAt    DateTime
+  type      AvailabilityExceptionType @default(UNAVAILABLE)
+  reason    String?
+  createdAt DateTime                  @default(now())
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([teacherId, startsAt, endsAt])
+}
+
+model BookingRule {
+  id                     String   @id @default(cuid())
+  minimumNoticeHours     Int      @default(6)
+  maximumNoticeDays      Int      @default(30)
+  defaultDurationMinutes Int      @default(60)
+  bufferMinutes          Int      @default(15)
+  allowStudentReschedule Boolean  @default(true)
+  allowTeacherReschedule Boolean  @default(true)
+  allowStaffOverride     Boolean  @default(true)
+  firstBookingStaffAssisted Boolean @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }
 
 model NotificationAttempt {

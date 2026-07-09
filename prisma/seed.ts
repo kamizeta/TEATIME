@@ -1,10 +1,15 @@
 import { PrismaClient, UserRole } from '@prisma/client'
-import { hashPassword } from '../src/lib/auth'
+import bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
 
+async function hashPassword(password: string) {
+  return bcrypt.hash(password, 10)
+}
+
 async function main() {
   const adminPassword = await hashPassword('admin123')
+  const staffPassword = await hashPassword('staff123')
   const teacherPassword = await hashPassword('prof123')
   const studentPassword = await hashPassword('alumno123')
 
@@ -32,6 +37,18 @@ async function main() {
     }
   })
 
+  const staffUser = await prisma.user.upsert({
+    where: { email: 'staff@academy.test' },
+    update: { password: staffPassword },
+    create: {
+      email: 'staff@academy.test',
+      password: staffPassword,
+      name: 'David Operaciones',
+      role: UserRole.STAFF,
+      phoneE164: '+573001234570'
+    }
+  })
+
   const studentUser = await prisma.user.upsert({
     where: { email: 'alumno@academy.test' },
     update: { password: studentPassword },
@@ -56,37 +73,133 @@ async function main() {
     create: { userId: studentUser.id, studentCode: 'STU-001', notes: 'Demo' }
   })
 
-  const packageId = await prisma.hourPackage.upsert({
-    where: { id: 'pkg-demo-1' },
-    update: { totalHours: 20, usedHours: 0 },
-    create: {
-      id: 'pkg-demo-1',
-      studentId: student.id,
-      totalHours: 20,
-      usedHours: 0,
-      validFrom: new Date('2026-01-01'),
-      validTo: new Date('2026-12-31'),
-      status: 'ACTIVE',
-    }
+  const packageId = (await prisma.hourPackage.findFirst({ where: { studentId: student.id, status: 'ACTIVE' } }))?.id
+
+  const pack = packageId
+    ? await prisma.hourPackage.update({
+        where: { id: packageId },
+        data: {
+          totalHours: 20,
+          usedHours: 0,
+          reservedHours: 0,
+          totalMinutes: 20 * 60,
+          usedMinutes: 0,
+          reservedMinutes: 0,
+          validFrom: new Date('2026-01-01'),
+          validTo: new Date('2026-12-31'),
+          allowedClassTypes: 'ONE_ON_ONE,GROUP',
+          allowedDurations: '50,60,90',
+        },
+      })
+    : await prisma.hourPackage.create({
+        data: {
+          studentId: student.id,
+          totalHours: 20,
+          usedHours: 0,
+          reservedHours: 0,
+          totalMinutes: 20 * 60,
+          usedMinutes: 0,
+          reservedMinutes: 0,
+          validFrom: new Date('2026-01-01'),
+          validTo: new Date('2026-12-31'),
+          status: 'ACTIVE',
+          allowedClassTypes: 'ONE_ON_ONE,GROUP',
+          allowedDurations: '50,60,90',
+        },
+      })
+
+  const existingAssignment = await prisma.studentTeacherAssignment.findFirst({
+    where: { studentId: student.id, teacherId: teacher.id, isPrimary: true },
   })
+
+  if (!existingAssignment) {
+    await prisma.studentTeacherAssignment.create({
+      data: {
+        studentId: student.id,
+        teacherId: teacher.id,
+        assignedByUserId: staffUser.id,
+        isPrimary: true,
+        notes: 'Asignación inicial demo',
+      },
+    })
+  }
+
+  const defaultBlocks = [
+    { weekday: 1, startLocalTime: '08:00', endLocalTime: '11:00', durationMinutes: 60, classType: 'ONE_ON_ONE', capacity: 1 },
+    { weekday: 3, startLocalTime: '08:00', endLocalTime: '11:00', durationMinutes: 60, classType: 'ONE_ON_ONE', capacity: 1 },
+    { weekday: 5, startLocalTime: '17:00', endLocalTime: '19:00', durationMinutes: 60, classType: 'GROUP', capacity: 4 },
+  ] as const
+
+  for (const block of defaultBlocks) {
+    const exists = await prisma.teacherAvailabilityBlock.findFirst({
+      where: {
+        teacherId: teacher.id,
+        weekday: block.weekday,
+        startLocalTime: block.startLocalTime,
+        endLocalTime: block.endLocalTime,
+        classType: block.classType,
+      },
+    })
+
+    if (!exists) {
+      await prisma.teacherAvailabilityBlock.create({
+        data: {
+          teacherId: teacher.id,
+          weekday: block.weekday,
+          startLocalTime: block.startLocalTime,
+          endLocalTime: block.endLocalTime,
+          timezone: 'America/Bogota',
+          durationMinutes: block.durationMinutes,
+          classType: block.classType,
+          capacity: block.capacity,
+        },
+      })
+    }
+  }
+
+  const bookingRule = await prisma.bookingRule.findFirst()
+  if (!bookingRule) {
+    await prisma.bookingRule.create({
+      data: {
+        minimumNoticeHours: 6,
+        maximumNoticeDays: 30,
+        defaultDurationMinutes: 60,
+        bufferMinutes: 15,
+        allowStudentReschedule: true,
+        allowTeacherReschedule: true,
+        allowStaffOverride: true,
+        firstBookingStaffAssisted: true,
+      },
+    })
+  }
 
   const startAt = new Date()
   startAt.setHours(startAt.getHours() + 1)
   const endAt = new Date(startAt.getTime() + 60 * 60 * 1000)
 
-  const existing = await prisma.classEvent.findFirst({ where: { googleEventId: 'evt_demo_1' } })
-  const classEvent = existing
-    ? existing
-    : await prisma.classEvent.create({
-        data: {
-          googleEventId: 'evt_demo_1',
-          title: 'Clase de Inglés - Demo',
-          startAt,
-          endAt,
-          meetUrl: 'https://meet.google.com/demo-clase',
-          teacherId: teacher.id,
-        },
-      })
+  const classEvent = await prisma.classEvent.upsert({
+    where: { googleEventId: 'evt_demo_1' },
+    update: {
+      title: 'Clase de Inglés - Demo',
+      startAt,
+      endAt,
+      meetUrl: 'https://meet.google.com/demo-clase',
+      teacherId: teacher.id,
+    },
+    create: {
+      googleEventId: 'evt_demo_1',
+      title: 'Clase de Inglés - Demo',
+      startAt,
+      endAt,
+      meetUrl: 'https://meet.google.com/demo-clase',
+      teacherId: teacher.id,
+      classType: 'ONE_ON_ONE',
+      durationMinutes: 60,
+      capacity: 1,
+      bookedById: staffUser.id,
+      bookingSource: 'STAFF',
+    },
+  })
 
   await prisma.classEnrollment.upsert({
     where: {
@@ -95,12 +208,14 @@ async function main() {
         studentId: student.id,
       },
     },
-    update: { packageId: packageId.id },
+    update: { packageId: pack.id },
     create: {
       classEventId: classEvent.id,
       studentId: student.id,
-      packageId: packageId.id,
+      packageId: pack.id,
       status: 'CONFIRMED',
+      reservedHours: 1,
+      reservedMinutes: 60,
     },
   })
 
@@ -110,10 +225,18 @@ async function main() {
     create: { key: 'CANCEL_GRACE_HOURS', value: '6' },
   })
 
-  console.log('Seed complete')
+  console.log('Seed complete', {
+    admin: adminUser.email,
+    staff: staffUser.email,
+    teacher: teacherUser.email,
+    student: studentUser.email,
+    class: classEvent.id,
+  })
 }
 
-main().catch((e) => {
-  console.error(e)
-  process.exit(1)
-}).finally(() => prisma.$disconnect())
+main()
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
+  .finally(() => prisma.$disconnect())

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: teatime-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: asistencia_teatime
+      POSTGRES_USER: teatime_user
+      POSTGRES_PASSWORD: teatime_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - teatime_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teatime_user -d asistencia_teatime"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  teatime_postgres_data:

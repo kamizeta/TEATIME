@@ -1,185 +1,429 @@
-# Design System
+# design_system.md
 
-## 1. Product and Brand Context
+## 1. Contexto del producto
 
-App de operación diaria para academia de idiomas. Tono: eficiente, directo, confiable. Prioridad: rapidez y baja fricción para tareas críticas (asistencia, cancelación, paquete y reporte).
+`TEATIME Ops` no debe parecer una red social ni un curso online. Debe parecer una torre de control academica construida a partir del tono actual de `teatimeacademy.com`: cercana, humana e internacional, pero con disciplina operativa. La app tiene tres modos de uso dominantes:
 
-## 2. Design Principles
+- escritorio denso para admin/staff;
+- movil funcional para profesor;
+- portal claro de reserva para alumno.
 
-1. Clarity over decoration
-2. Estado primero: todo objeto debe mostrar estado claro
-3. Acción segura por defecto
-4. Menor carga cognitiva en flujos repetitivos
-5. Diseño responsive utilitario para escritorio y móvil
+## 2. Direccion visual
 
-## 3. Visual Direction
+### Personalidad
 
-Look and feel: dashboard profesional con alta legibilidad.
-- Densidad media-alta para tablas.
-- Evitar iconografía ambigua, bordes redondeados suaves, tipografía clara.
-- No usar estética de “app social” ni elementos lúdicos.
+- sobria;
+- profesional;
+- calida;
+- precisa;
+- internacional;
+- operativa.
 
-## 4. Design Tokens
+### Lo que si debe transmitir
 
-### Color
+- control;
+- trazabilidad;
+- calma en medio del caos;
+- claridad de estados;
+- acompañamiento.
 
-- primary: `#0F6BFF`
-- secondary: `#0A9BFF`
-- success: `#16A34A`
-- warning: `#D97706`
-- danger: `#DC2626`
-- neutral-900: `#0F172A`
-- neutral-700: `#334155`
-- neutral-400: `#94A3B8`
-- surface: `#FFFFFF`
-- surface-muted: `#F8FAFC`
-- border: `#E2E8F0`
-- focus: `#2563EB`
+### Lo que no debe transmitir
 
-### Typography
+- juguete;
+- plataforma educativa infantil;
+- CRM generico sin criterio;
+- exceso de decoracion.
 
-- Fuente base: `Inter`.
-- Scale: 12, 14, 16, 18, 20, 24, 32 px.
-- Pesos: 400/500/600/700.
+## 3. Principios de diseno
 
-### Spacing and Layout
+1. Estado antes que ornamento.
+2. Una accion critica nunca debe ser ambigua.
+3. La informacion clave debe entenderse en menos de 5 segundos.
+4. El profesor no debe navegar de mas para cerrar una clase.
+5. Los mismos colores y palabras deben significar exactamente lo mismo en toda la app.
+6. El alumno debe sentir autonomia guiada, no libertad caotica.
+7. La reserva debe sentirse confiable y limitada por reglas claras.
 
-- Grid: 12 columnas desktop, 1–2 columnas mobile.
-- Spacing scale: 4, 8, 12, 16, 24, 32, 40.
-- Page width max: 1280 px.
-- Gutter desktop 16, mobile 12.
+## 4. Sistema visual
 
-### Radius, Shadows, Borders
+### Color tokens
 
-- Radius: cards 12, botones 8, modales 16.
-- Shadows: leve 0 8 30 0 `rgba(15,23,42,0.08)`.
-- Border: 1px solid base.
+- `--bg`: `#f7f8fb`
+- `--surface`: `#ffffff`
+- `--surface-2`: `#f2f5f8`
+- `--ink`: `#243446`
+- `--muted`: `#6d7783`
+- `--line`: `#dbe2ea`
+- `--brand`: `#ea5434`
+- `--brand-deep`: `#c9482d`
+- `--secondary`: `#3e5b74`
+- `--accent-soft`: `#6ec1e4`
+- `--accent-positive`: `#61ce70`
+- `--success`: `#218c5c`
+- `--warning`: `#b87a24`
+- `--danger`: `#c44536`
+- `--info`: `#4f8db8`
+
+### Tipografia
+
+- Display puntual: `Baloo Tammudu 2`
+- Titulos UI: `Montserrat`
+- Texto base: `Roboto`
+- Numeros/tablas: `Roboto Mono`
+
+### Escala tipografica
+
+- `12`, `14`, `16`, `18`, `22`, `28`, `36`
+
+### Espaciado
+
+- `4`, `8`, `12`, `16`, `24`, `32`, `40`
+
+### Bordes y volumen
+
+- Radio pequeño: `8`
+- Radio medio: `12`
+- Radio grande: `18`
+- Sombra base: `0 10px 30px rgba(16, 24, 40, 0.08)`
 
 ### Motion
 
-- Transiciones: 160ms ease-out.
-- Skeleton shimmer suave 1s.
-- `prefers-reduced-motion`: desactivar animaciones largas.
+- transiciones: `140ms` a `180ms`;
+- skeletons suaves;
+- nada de animaciones largas o decorativas.
 
-## 5. Information Architecture and Navigation
+## 5. Estados semanticos
 
-- Navegación primaria (Desktop):
-  - Dashboard
-  - Calendario
-  - Clases
-  - Paquetes
-  - Reportes
-  - Ajustes
-- Móvil: barra inferior con Dashboard, Clases, Reportes.
-- Acceso rápido: botón fijo para "Registrar Asistencia" en Clase activa.
+### Estados de clase
 
-## 6. Core Components
+- `Programada`: azul
+- `Reservada`: coral suave
+- `En curso`: teal oscuro
+- `Realizada`: verde
+- `Cancelada`: rojo
+- `Reprogramada`: naranja
+- `Incidencia`: ocre
+- `Sin cierre`: gris oscuro
 
-- TopBar: título, usuario, rol, acciones rápidas.
-- StatCard: métrica + mini tendencia + estado.
-- CalendarTimeline: vista semanal con filtros por profesor/alumno.
-- ClassRow: fila compacta con estado (programada, hecha, cancelada, pendiente).
-- AttendanceGrid: tabla con asistentes y toggles.
-- CancelDialog: modal con motivo y confirmación + motivo de bloqueo.
-- RuleBadge: etiqueta de estado/regla (OK, Riesgo, Bloqueado).
-- AuditTimeline: lista de cambios con timestamp.
-- NotifyBanner: estado de notificación WhatsApp.
+### Estados de integracion
 
-## 7. Screen Map from PRD Moments of Contact
+- `Sincronizada`
+- `Pendiente`
+- `Con error`
+- `Parcial`
 
-- Login
-  - Objetivo: acceso seguro por rol.
-  - Componentes: formulario, campo de error, validación.
-  - Estado: loading/error.
-- Dashboard Admin
-  - Objetivo: visión diaria de operación.
-  - Componentes: StatCard, CalendarTimeline, alertas.
-- Calendario Operativo
-  - Objetivo: controlar programación.
-  - Estados: vacío, duplicado, conflicto.
-- Detalle de Clase
-  - Objetivo: marcar asistencia y justificar cancelaciones.
-  - Componentes: AttendanceGrid, CancelDialog, AuditTimeline.
-- Lista de Incidencias
-  - Objetivo: seguimiento de bloqueos/sos.
-  - Componentes: filtros, chips de estado, acción resolver.
-- Gestión de Paquetes
-  - Objetivo: crear paquetes y consultar saldo.
-  - Componentes: tabla+modal.
+### Estados de saldo
+
+- `Disponible`
+- `Por vencer`
+- `Agotado`
+- `Ajustado manualmente`
+
+## 6. Arquitectura de informacion
+
+### Navegacion admin/staff
+
+- Dashboard
+- Calendario
+- Clases
+- Paquetes
+- CRM
+- Incidencias
 - Reportes
-  - Objetivo: exportar asistencia y horas.
-  - Componentes: select de periodo, tabla, export.
-- Ajustes de Reglas
-  - Objetivo: editar ventanas y políticas.
-  - Componentes: toggle y campos de horas.
-- Panel Profesor
-  - Objetivo: vista personal diaria.
-  - Componentes: calendario, clase activa, botón asistencia.
-- Vista Alumno
-  - Objetivo: consulta de agenda y saldo.
-  - Componentes: lista de clases y estado.
+- Ajustes
 
-## 8. Key Screen Patterns
+### Navegacion teacher
 
-- Todos los formularios usan validación inline + tooltip de ayuda.
-- Confirmación destructiva obligatoria para:
-  - Borrar clases
-  - Cambiar asistencia después de cierre
-  - Ajustes manuales de saldo
-- Filtros persistentes por sesión.
+- Hoy
+- Mi agenda
+- Mi disponibilidad
+- Mis alumnos
+- Incidencias
 
-## 9. Forms and Inputs
+### Navegacion student
 
-- Labels explícitas, placeholders mínimos.
-- Campos obligatorios marcados con asterisco.
-- Fechas en formato local `DD/MM/YYYY hh:mm`.
-- Selector de estado con chips de 3 estados como mínimo.
+- Proximas clases
+- Reservar clase
+- Historial
+- Mi saldo
+- Politicas
 
-## 10. Data Display
+## 7. Layouts principales
 
-- Tablas con paginación de 25 por vista.
-- Ordenamiento por fecha, profesor, estado.
-- Colores por estado:
-  - Hecha/Asistió: verde
-  - Pendiente: amarillo
-  - Ausente: gris
-  - Cancelada: rojo
+### Admin desktop
 
-## 11. Feedback States
+- sidebar fija;
+- topbar con estado de sync y accesos rapidos;
+- area central con modulos densos;
+- panel lateral contextual en detalle de clase o incidente.
 
-- Loading: esqueleto + texto "Sincronizando..."
-- Empty: icono de calendario y CTA para importar.
-- Error: bloque rojo con acción de reintentar.
-- Success: toast verde.
-- Warning: banner amarillo con acción recomendada.
-- Disabled: opacidad 60%, cursor no permitido.
-- Offline: banner superior con timestamp de última sincronización.
+### Teacher mobile-first
 
-## 12. Accessibility
+- barra superior compacta;
+- lista cronologica de clases;
+- bloque editable de disponibilidad;
+- CTA fijo `Marcar asistencia` cuando hay clase activa;
+- flujo de 1 mano.
 
-- Contraste mínimo AA.
-- Teclado para flujos clave (enter, escape, tab).
-- Focus visible mínimo 2px.
-- Tamaño de click mínimo 44x44 px en móvil.
+### Student portal
 
-## 13. Content Style
+- layout simple;
+- lenguaje tranquilo;
+- flujo central de seleccionar slot y confirmar reserva con su profesor asignado;
+- mucho menos densidad que admin.
 
-- Tono: directo, sin ambigüedad.
-- Mensajes de error: indicar causa y siguiente acción.
-- Terminología consistente: "Clase", "Asistencia", "Cancelación", "Saldo".
+## 8. Componentes principales
 
-## 14. Design QA Checklist
+### `AppShell`
 
-- ¿Cada pantalla tiene estado vacío y error?
-- ¿Todos los estados críticos tienen confirmación?
-- ¿Las etiquetas de estado usan el mismo significado en tablas y notificaciones?
-- ¿Lectura rápida de 3 métricas clave posible en <= 5s?
-- ¿Alumno no puede editar datos de asistencia?
-- ¿Vista móvil conserva acciones críticas?
+- sidebar, topbar, area principal;
+- variante por rol.
 
-## 15. Handoff to Architecture
+### `KpiCard`
 
-- Requiere estados de evento persistentes y auditables.
-- El frontend depende de eventos de sincronización y de reglas de permiso por rol.
-- Reportes deben consumir IDs estables de clase/usuario.
-- Se necesitan websockets opcionales para reflejo rápido de asistencia en vivo.
+- numero principal;
+- etiqueta;
+- delta o alerta breve.
+
+### `OperationalBanner`
+
+- sync de calendario;
+- cola de notificaciones;
+- incidencias criticas del dia.
+
+### `ClassTimeline`
+
+- vista diaria/semanal;
+- color semantico;
+- conflicto visual si hay solapes o datos incompletos.
+
+### `AvailabilityGrid`
+
+- matriz semanal de slots;
+- variante teacher para publicar disponibilidad;
+- variante student para elegir solo espacios reservables de su profesor asignado.
+
+### `ClassCard`
+
+- hora;
+- alumno(s);
+- profesor;
+- saldo relacionado;
+- estado;
+- accesos de accion.
+
+### `BookingPanel`
+
+- resumen de profesor, idioma, duracion y politica;
+- muestra disponibilidad real filtrada;
+- incluye confirmacion final y consecuencias de cancelacion;
+- soporta duraciones multiples y clases `1:1` o grupales.
+
+### `AttendancePanel`
+
+- check rapido por alumno;
+- selector de estado;
+- notas de incidente;
+- confirmacion de cierre.
+
+### `PolicyBadge`
+
+- muestra si una cancelacion esta `OK`, `Sensible` o `Bloqueada`.
+
+### `SlotBadge`
+
+- `Disponible`, `Reservado`, `No disponible`, `Requiere aprobacion`.
+
+### `IncidentDrawer`
+
+- detalle de problema;
+- dueño;
+- resolucion;
+- historial.
+
+### `PackageLedger`
+
+- horas compradas;
+- consumidas;
+- pendientes;
+- ajustes;
+- compatibilidad con duraciones variables y clases grupales.
+
+### `CRMCard`
+
+- etapa;
+- ultimo contacto;
+- origen;
+- proxima accion.
+
+### `AuditTrail`
+
+- actor;
+- timestamp;
+- cambio;
+- antes/despues resumido.
+
+## 9. Especificacion por momento de contacto
+
+### Login
+
+- objetivo: acceso claro por rol;
+- campos: email, password;
+- estados: loading, error de credenciales, sesion expirada.
+
+### Dashboard operativo
+
+- objetivo: detectar riesgo del dia en segundos;
+- modulos: KPIs, clases de hoy, clases sin cierre, incidentes, sync status.
+
+### Calendario maestro
+
+- objetivo: ver capacidad y conflictos;
+- modulos: timeline, filtros, leyenda, detalle rapido.
+
+### Agenda del profesor
+
+- objetivo: ejecutar su dia sin friccion;
+- modulos: lista de hoy, proxima clase, CTA de asistencia, disponibilidad editable, incidencias propias.
+
+### Reserva de clase
+
+- objetivo: permitir self-scheduling sin errores;
+- modulos: resumen del profesor asignado, selector de duracion permitida, slot picker, resumen de reglas, confirmacion.
+
+### Onboarding de reserva inicial
+
+- objetivo: que staff haga la primera reserva y el alumno luego la vea reflejada;
+- modulos: ficha del alumno, profesor asignado, paquete, primera reserva sugerida, confirmacion.
+
+### Detalle de clase
+
+- objetivo: resolver toda la operacion de una clase en un solo lugar;
+- modulos: datos base, Meet, paquete, asistencia, historial, acciones.
+
+### Modal de cancelacion/reprogramacion
+
+- objetivo: detener errores;
+- modulos: regla aplicada, tiempo restante, motivo, aprobacion requerida.
+
+### Gestion de paquetes
+
+- objetivo: leer saldo real y movimientos;
+- modulos: ledger, ajuste manual, vigencia, alertas.
+
+### CRM
+
+- objetivo: centralizar contexto del alumno o lead;
+- modulos: perfil, notas, etapa, historial resumido.
+
+### Centro de incidencias
+
+- objetivo: que nada quede en el aire;
+- modulos: cola de pendientes, severidad, responsable, SLA operativo.
+
+### Reportes
+
+- objetivo: cerrar semana y exportar;
+- modulos: filtros, tabla, CSV, resumen visual.
+
+### Ajustes
+
+- objetivo: modificar reglas sin tocar codigo;
+- modulos: politicas, usuarios, integraciones, plantillas.
+
+### Portal de alumno
+
+- objetivo: consulta sencilla y confianza;
+- modulos: proximas clases, saldo, historial, politicas, acceso a reservar.
+
+## 10. Patrones de interaccion
+
+- acciones destructivas o sensibles siempre con confirmacion;
+- filtros persistentes por sesion;
+- acciones mas comunes visibles sin abrir menus profundos;
+- feedback inmediato despues de marcar asistencia o guardar ajuste;
+- estados bloqueados explican el por que, no solo deshabilitan.
+- en self-scheduling, el slot elegido debe mostrar regla y saldo antes de confirmar.
+- si la primera reserva fue creada por staff, debe verse claramente como `Reserva creada para ti`.
+
+## 11. Responsive behavior
+
+- admin pensado para `1280px+`, pero utilizable desde `1024px`;
+- teacher optimizado para `390px-430px`;
+- student optimizado para `390px-768px`;
+- tablas densas pasan a cards apiladas en movil;
+- paneles secundarios se convierten en drawer en pantalla pequena.
+
+## 12. Estados de feedback
+
+### Loading
+
+- skeleton + texto especifico: `Sincronizando calendario`, `Cargando saldo`, etc.
+
+### Empty
+
+- mensaje accionable, no vacio decorativo.
+
+### Error
+
+- causa resumida + que puede hacer el usuario.
+
+### Conflict
+
+- mensaje explicito cuando un slot ya no esta disponible o entra en conflicto.
+
+### Success
+
+- toast corto con hora de accion.
+
+### Approval required
+
+- banner/modal claro cuando una accion queda pendiente de staff o admin.
+
+### Disabled
+
+- boton deshabilitado + tooltip o texto explicativo.
+
+### Permission denied
+
+- pantalla o banner claro: `No tienes permiso para esta accion`.
+
+### Offline or degraded
+
+- banner fijo con ultima sincronizacion y modulos afectados.
+
+## 13. Accesibilidad
+
+- contraste AA minimo;
+- tamano objetivo tactil `44x44`;
+- foco visible consistente;
+- navegacion por teclado en formularios y modales;
+- semantica clara en tablas y estados;
+- textos implementados desde claves i18n para `ES/EN` y futuros idiomas.
+
+## 14. Contenido y tono
+
+- tono directo y profesional;
+- tono humano, internacional y claro, alineado con la web de TEATIME;
+- nada de mensajes vagos como `Algo salio mal`;
+- copiar exactitud operativa: `Clase cerrada`, `Saldo ajustado`, `Cancelacion fuera de ventana`, `Reserva confirmada`.
+
+## 15. Checklist QA de diseno
+
+- Cada pantalla tiene estados `loading`, `empty`, `error`, `success`, `permission`.
+- Todo color semantico tiene un unico significado.
+- La politica `24/12/6` se entiende visualmente en todas las acciones relacionadas.
+- El profesor puede cerrar una clase completa en menos de 30 segundos.
+- El alumno no encuentra acciones que no le corresponden.
+- El dashboard permite detectar excepciones del dia sin abrir reportes.
+- El alumno puede reservar una clase sin confundir disponibilidad con solicitud pendiente.
+- La primera reserva asistida por staff se diferencia visualmente de una reserva hecha por el alumno.
+
+## 16. Handoff a arquitectura
+
+- El frontend depende de una fuente de verdad transaccional para clase, asistencia y saldo.
+- La vista de clase requiere historial y reglas calculadas en backend.
+- El dashboard necesita consultas agregadas rapidas y polling inicial.
+- Los labels y estados deben venir de enums estables compartidos entre backend y frontend.
+- El calendario de reservas necesita API de slots computados, no solo eventos crudos.
+- La capa i18n debe montarse desde el inicio para `ES/EN` y expansion futura sin refactor grande.

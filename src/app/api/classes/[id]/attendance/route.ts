@@ -31,13 +31,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       create: { classEventId: params.id, studentId, status, markedBy: session.userId },
     })
 
-    if (status === 'attended' && (!previous || previous.status !== 'attended')) {
-      await prisma.hourPackage.update({
-        where: { id: enrollment.package.id },
-        data: { usedHours: { increment: 1 } },
-      })
-    }
-
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e.message }, { status: 500 })
