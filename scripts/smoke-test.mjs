@@ -68,6 +68,22 @@ async function main() {
     if (!ok) failures.push(`POST ${route} -> ${response.status}`)
   }
 
+  const classListResponse = await fetch(`${baseUrl}/api/classes`, { headers: { cookie } })
+  const classList = await classListResponse.json().catch(() => [])
+  const firstClass = Array.isArray(classList) ? classList[0] : classList.events?.[0]
+  if (firstClass?.id) {
+    const response = await fetch(`${baseUrl}/api/classes/${firstClass.id}/google-sync`, {
+      method: 'POST',
+      headers: { cookie, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ operation: 'upsert' }),
+    })
+    const ok = response.status >= 200 && response.status < 400
+    console.log(`${ok ? 'OK' : 'FAIL'} ${response.status} POST /api/classes/${firstClass.id}/google-sync`)
+    if (!ok) failures.push(`POST /api/classes/${firstClass.id}/google-sync -> ${response.status}`)
+  } else {
+    console.log('SKIP no class found for Google sync smoke')
+  }
+
   for (const route of advisoryRoutes) {
     const response = await fetch(`${baseUrl}${route}`)
     const body = await response.json().catch(() => ({}))

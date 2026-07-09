@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { syncClassEventToGoogleCalendar } from '@/lib/google-calendar'
 
 function toLegacyHourUnits(minutes: number) {
   return Math.ceil(minutes / 60)
@@ -77,7 +78,7 @@ export async function createManualClassAction(formData: FormData) {
     redirect(withQuery(redirectPath, { ops: 'error', code: 'INSUFFICIENT_PACKAGE_BALANCE' }))
   }
 
-  await prisma.$transaction(async (tx) => {
+  const createdClassId = await prisma.$transaction(async (tx) => {
     const createdClass = await tx.classEvent.create({
       data: {
         title,
@@ -132,7 +133,11 @@ export async function createManualClassAction(formData: FormData) {
         }),
       },
     })
+
+    return createdClass.id
   })
+
+  await syncClassEventToGoogleCalendar(createdClassId, 'upsert')
 
   revalidatePath('/admin/dashboard')
   revalidatePath('/admin/calendar')
@@ -249,6 +254,8 @@ export async function rescheduleClassAction(formData: FormData) {
     })
   })
 
+  await syncClassEventToGoogleCalendar(classId, 'upsert')
+
   revalidatePath('/admin/calendar')
   revalidatePath('/admin/dashboard')
   revalidatePath(`/admin/classes/${classId}`)
@@ -320,6 +327,8 @@ export async function addStudentToClassAction(formData: FormData) {
       },
     })
   })
+
+  await syncClassEventToGoogleCalendar(classId, 'upsert')
 
   revalidatePath(`/admin/classes/${classId}`)
   revalidatePath('/admin/calendar')
@@ -428,4 +437,26 @@ export async function adjustPackageMinutesAction(formData: FormData) {
   revalidatePath('/admin/packages')
   revalidatePath('/admin/dashboard')
   redirect(withQuery(redirectPath, { package: 'adjusted' }))
+}
+
+export async function syncClassWithGoogleAction(formData: FormData) {
+  const session = await requireRole(['ADMIN', 'STAFF'])
+  const classId = String(formData.get('classId') || '')
+  const redirectPath = String(formData.get('redirectPath') || `/admin/classes/${classId}`)
+  if (!classId) redirect(withQuery(redirectPath, { ops: 'error', code: 'MISSING_CLASS_ID' }))
+
+  const result = await syncClassEventToGoogleCalendar(classId, 'upsert')
+  await prisma.auditLog.create({
+    data: {
+      actorId: session.userId,
+      action: 'GOOGLE_CLASS_SYNC_REQUESTED',
+      entityType: 'CLASS_EVENT',
+      entityId: classId,
+      after: JSON.stringify(result),
+    },
+  })
+
+  revalidatePath(`/admin/classes/${classId}`)
+  revalidatePath('/admin/calendar')
+  redirect(withQuery(redirectPath, { ops: result.ok ? 'google_synced' : 'google_failed' }))
 }

@@ -1,6 +1,7 @@
 import type { AppRole } from '@/lib/navigation'
 import { prisma } from '@/lib/prisma'
 import { buildLedgerReleaseUpdate } from '@/lib/package-ledger'
+import { syncClassEventToGoogleCalendar } from '@/lib/google-calendar'
 
 type CancellationScope = 'SELF' | 'CLASS'
 
@@ -138,6 +139,12 @@ export async function requestCancellation(input: {
       data: { status: 'CANCELED' },
     })
   })
+
+  const updatedClass = await prisma.classEvent.findUnique({ where: { id: classId }, include: { enrollments: true } })
+  const shouldCancelGoogleEvent =
+    scope === 'CLASS' || !updatedClass || updatedClass.status === 'CANCELED' || updatedClass.enrollments.every((item) => item.status !== 'CONFIRMED')
+
+  await syncClassEventToGoogleCalendar(classId, shouldCancelGoogleEvent ? 'cancel' : 'upsert')
 
   return {
     ok: true as const,

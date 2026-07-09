@@ -1,5 +1,6 @@
 import { ClassType, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { syncClassEventToGoogleCalendar } from '@/lib/google-calendar'
 
 type PrimaryBookingContext = {
   student: {
@@ -348,7 +349,7 @@ export async function createBookingForStudent(userId: string, slotToken: string)
     throw new Error('SLOT_ALREADY_TAKEN')
   }
 
-  return prisma.$transaction(async (tx) => {
+  const bookedClass = await prisma.$transaction(async (tx) => {
     const pack = await tx.hourPackage.findUnique({ where: { id: context.package.id } })
     if (!pack) throw new Error('PACKAGE_NOT_FOUND')
 
@@ -420,6 +421,9 @@ export async function createBookingForStudent(userId: string, slotToken: string)
 
     return classEvent
   })
+
+  await syncClassEventToGoogleCalendar(bookedClass.id, 'upsert')
+  return bookedClass
 }
 
 export async function createAvailabilityBlockForTeacher(userId: string, input: {

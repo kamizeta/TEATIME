@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { formatMinutesLabel } from '@/lib/booking'
 import { closeClassAction } from '@/lib/actions/booking'
-import { addStudentToClassAction, rescheduleClassAction, submitCancellationAction } from '@/lib/actions'
+import { addStudentToClassAction, rescheduleClassAction, submitCancellationAction, syncClassWithGoogleAction } from '@/lib/actions'
 
 function toDateTimeLocalValue(date: Date) {
   const year = date.getFullYear()
@@ -103,6 +103,8 @@ export default async function ClassDetail({
       ) : null}
       {searchParams?.ops === 'rescheduled' ? <p className="status-success">Clase reagendada y reservas ajustadas.</p> : null}
       {searchParams?.ops === 'student_added' ? <p className="status-success">Alumno agregado a la clase grupal y saldo reservado.</p> : null}
+      {searchParams?.ops === 'google_synced' ? <p className="status-success">Clase sincronizada con Google Calendar/Meet.</p> : null}
+      {searchParams?.ops === 'google_failed' ? <p className="status-warning">No se pudo sincronizar con Google Calendar. Revisa ajustes o eventos de sync.</p> : null}
       {searchParams?.ops === 'error' ? <p className="status-warning">{getOpsErrorMessage(opsCode)}</p> : null}
 
       <section className="panel">
@@ -111,7 +113,22 @@ export default async function ClassDetail({
           <h2>Datos operativos</h2>
         </div>
         <div className="stack-md">
-          <p>Meet: {ev.meetUrl || 'sin link'}</p>
+          <p>Google Event ID: {ev.googleEventId || 'sin sincronizar'}</p>
+          <p>
+            Meet:{' '}
+            {ev.meetUrl ? (
+              <a className="text-link" href={ev.meetUrl} target="_blank" rel="noreferrer">
+                {ev.meetUrl}
+              </a>
+            ) : (
+              'sin link'
+            )}
+          </p>
+          <form action={syncClassWithGoogleAction}>
+            <input type="hidden" name="classId" value={ev.id} />
+            <input type="hidden" name="redirectPath" value={`/admin/classes/${ev.id}`} />
+            <button type="submit" className="button-link">Sincronizar Google/Meet</button>
+          </form>
           <form action={closeClassAction}>
             <input type="hidden" name="classId" value={ev.id} />
             <button type="submit" className="button-ghost">Cerrar clase y consumir saldo</button>

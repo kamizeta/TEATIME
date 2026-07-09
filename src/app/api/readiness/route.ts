@@ -29,8 +29,10 @@ export async function GET() {
   checks.push(
     check(
       'google_oauth',
-      Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
-      'Google OAuth credentials configured'
+      process.env.GOOGLE_DRY_RUN !== 'false' || Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+      process.env.GOOGLE_DRY_RUN !== 'false'
+        ? 'Google Calendar is allowed to run in dry-run mode'
+        : 'Google OAuth credentials configured'
     )
   )
   checks.push(
