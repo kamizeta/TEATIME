@@ -10,7 +10,8 @@
     "postinstall": "prisma generate",
     "db:gen": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "ts-node --transpile-only prisma/seed.ts"
+    "db:seed": "ts-node --transpile-only prisma/seed.ts",
+    "smoke": "node scripts/smoke-test.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.17.0",

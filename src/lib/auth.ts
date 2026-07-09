@@ -61,6 +61,8 @@ export async function requireRole(roles: AppRole[]) {
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
   if (!user) throw new Error('UNAUTHORIZED')
+  if (!user.isActive) throw new Error('UNAUTHORIZED')
+  if (user.role !== session.role || !roles.includes(user.role)) throw new Error('UNAUTHORIZED')
 
-  return { userId: session.userId, role: session.role }
+  return { userId: session.userId, role: user.role }
 }
