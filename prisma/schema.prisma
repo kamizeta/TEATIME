@@ -50,6 +50,22 @@ enum NotificationStatus {
   FAILED
 }
 
+enum ContactStatus {
+  NEW
+  CONTACTED
+  TRIAL_SCHEDULED
+  ACTIVE_STUDENT
+  LOST
+}
+
+enum ContactSource {
+  WHATSAPP
+  WEBSITE
+  REFERRAL
+  MANUAL
+  OTHER
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -68,6 +84,7 @@ model User {
   auditLogs             AuditLog[]
   bookedClasses         ClassEvent[]               @relation("ClassBookedBy")
   assignmentActions     StudentTeacherAssignment[] @relation("AssignmentCreatedBy")
+  ownedCrmContacts      CrmContact[]               @relation("CrmContactOwner")
 }
 
 model Teacher {
@@ -93,6 +110,28 @@ model Student {
   enrollments ClassEnrollment[]
   attendances AttendanceRecord[]
   teacherAssignments StudentTeacherAssignment[]
+  crmContacts        CrmContact[]
+}
+
+model CrmContact {
+  id                String        @id @default(cuid())
+  fullName          String
+  email             String?
+  phoneE164         String?
+  preferredLanguage String        @default("es")
+  source            ContactSource @default(MANUAL)
+  status            ContactStatus @default(NEW)
+  notes             String?
+  ownerId           String?
+  convertedStudentId String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  owner            User?    @relation("CrmContactOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  convertedStudent Student? @relation(fields: [convertedStudentId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([ownerId])
 }
 
 model StudentTeacherAssignment {

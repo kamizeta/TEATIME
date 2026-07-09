@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole } from '@prisma/client'
+import { ContactSource, ContactStatus, NotificationStatus, PrismaClient, UserRole } from '@prisma/client'
 import bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
@@ -224,6 +224,35 @@ async function main() {
     update: { value: '6' },
     create: { key: 'CANCEL_GRACE_HOURS', value: '6' },
   })
+
+  const existingCrmContacts = await prisma.crmContact.count()
+  if (!existingCrmContacts) {
+    const contact = await prisma.crmContact.create({
+      data: {
+        fullName: 'Laura Gómez',
+        email: 'laura.demo@example.com',
+        phoneE164: '+573001112233',
+        preferredLanguage: 'es',
+        source: ContactSource.WHATSAPP,
+        status: ContactStatus.CONTACTED,
+        notes: 'Quiere clases de conversación. Disponible martes y jueves después de las 6pm.',
+        ownerId: staffUser.id,
+      },
+    })
+
+    await prisma.notificationAttempt.create({
+      data: {
+        targetType: 'CRM_CONTACT',
+        targetId: contact.id,
+        channel: 'WHATSAPP',
+        status: NotificationStatus.PENDING,
+        payload: JSON.stringify({
+          message: 'Hola Laura, te escribimos de TEATIME Academy para coordinar tu clase demo.',
+          createdBy: staffUser.id,
+        }),
+      },
+    })
+  }
 
   console.log('Seed complete', {
     admin: adminUser.email,

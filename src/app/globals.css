@@ -194,6 +194,19 @@ th {
   gap: 6px;
 }
 
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.form-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .hero,
 .panel,
 .auth-card,
@@ -227,6 +240,20 @@ h3 {
 .page-lead,
 .muted {
   color: var(--muted);
+}
+
+.block-muted {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.clamp {
+  display: -webkit-box;
+  max-width: 520px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .eyebrow {
