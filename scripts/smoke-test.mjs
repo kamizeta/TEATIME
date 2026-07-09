@@ -16,6 +16,8 @@ const routes = [
   '/admin/reports',
 ]
 
+const protectedPostRoutes = ['/api/notifications/process']
+
 const advisoryRoutes = ['/api/readiness']
 
 function cookieHeaderFrom(response) {
@@ -53,6 +55,17 @@ async function main() {
     const ok = response.status >= 200 && response.status < 400
     console.log(`${ok ? 'OK' : 'FAIL'} ${response.status} ${route}`)
     if (!ok) failures.push(`${route} -> ${response.status}`)
+  }
+
+  for (const route of protectedPostRoutes) {
+    const response = await fetch(`${baseUrl}${route}`, {
+      method: 'POST',
+      headers: { cookie, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit: 1 }),
+    })
+    const ok = response.status >= 200 && response.status < 400
+    console.log(`${ok ? 'OK' : 'FAIL'} ${response.status} POST ${route}`)
+    if (!ok) failures.push(`POST ${route} -> ${response.status}`)
   }
 
   for (const route of advisoryRoutes) {

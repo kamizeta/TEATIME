@@ -12,6 +12,7 @@ import {
 } from '@prisma/client'
 import { hashPassword, requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { processNotificationQueue } from '@/lib/notifications/dispatcher'
 
 function withQuery(path: string, entries: Record<string, string>) {
   const [pathname, query = ''] = path.split('?')
@@ -317,4 +318,30 @@ export async function updateStaffPermissionAction(formData: FormData) {
 
   revalidatePath('/admin/users')
   redirect(withQuery(redirectPath, { user: 'permissions' }))
+}
+
+export async function processNotificationQueueAction(formData: FormData) {
+  const session = await requireRole(['ADMIN', 'STAFF'])
+  const redirectPath = String(formData.get('redirectPath') || '/admin/notifications')
+  const limit = Number(formData.get('limit') || 20)
+  const result = await processNotificationQueue(Number.isFinite(limit) ? limit : 20)
+
+  await prisma.auditLog.create({
+    data: {
+      actorId: session.userId,
+      action: 'NOTIFICATION_QUEUE_PROCESSED',
+      entityType: 'NOTIFICATION_ATTEMPT',
+      entityId: 'QUEUE',
+      after: JSON.stringify(result),
+    },
+  })
+
+  revalidatePath('/admin/notifications')
+  revalidatePath('/admin/dashboard')
+  redirect(withQuery(redirectPath, {
+    notification: 'processed',
+    processed: String(result.processed),
+    sent: String(result.sent),
+    failed: String(result.failed),
+  }))
 }

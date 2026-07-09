@@ -36,8 +36,19 @@ export async function GET() {
   checks.push(
     check(
       'whatsapp',
-      Boolean(process.env.WHATSAPP_API_URL && process.env.WHATSAPP_TOKEN),
-      'WhatsApp provider credentials configured'
+      process.env.NOTIFICATIONS_DRY_RUN !== 'false' || Boolean(process.env.WHATSAPP_API_URL && process.env.WHATSAPP_TOKEN),
+      process.env.NOTIFICATIONS_DRY_RUN !== 'false'
+        ? 'WhatsApp is allowed to run in dry-run mode'
+        : 'WhatsApp provider credentials configured'
+    )
+  )
+  checks.push(
+    check(
+      'email',
+      process.env.NOTIFICATIONS_DRY_RUN !== 'false' || Boolean(process.env.EMAIL_PROVIDER && process.env.EMAIL_FROM && process.env.RESEND_API_KEY),
+      process.env.NOTIFICATIONS_DRY_RUN !== 'false'
+        ? 'Email is allowed to run in dry-run mode'
+        : 'Email provider credentials configured'
     )
   )
   checks.push(

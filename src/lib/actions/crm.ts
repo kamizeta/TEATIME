@@ -317,6 +317,9 @@ export async function createNotificationDraftAction(formData: FormData) {
   const targetId = String(formData.get('targetId') || '').trim()
   const channel = String(formData.get('channel') || 'WHATSAPP').trim().toUpperCase()
   const message = String(formData.get('message') || '').trim()
+  const to = String(formData.get('to') || '').trim()
+  const phoneE164 = String(formData.get('phoneE164') || '').trim()
+  const subject = String(formData.get('subject') || '').trim()
 
   if (!targetType || !targetId || !message) {
     redirect(withQuery(redirectPath, { notification: 'error', code: 'MISSING_NOTIFICATION_FIELDS' }))
@@ -328,7 +331,7 @@ export async function createNotificationDraftAction(formData: FormData) {
       targetId,
       channel,
       status: NotificationStatus.PENDING,
-      payload: JSON.stringify({ message, createdBy: session.userId }),
+      payload: JSON.stringify({ message, subject: subject || undefined, to: to || undefined, phoneE164: phoneE164 || undefined, createdBy: session.userId }),
     },
   })
 

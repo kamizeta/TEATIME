@@ -4,7 +4,7 @@ import { NotificationStatus } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { createNotificationDraftAction, markNotificationStatusAction } from '@/lib/actions'
+import { createNotificationDraftAction, markNotificationStatusAction, processNotificationQueueAction } from '@/lib/actions'
 
 const statusLabels: Record<NotificationStatus, string> = {
   PENDING: 'Pendiente',
@@ -71,6 +71,11 @@ export default async function AdminNotificationsPage({
 
       {notificationStatus === 'created' ? <p className="status-success">Notificación creada.</p> : null}
       {notificationStatus === 'updated' ? <p className="status-success">Estado actualizado.</p> : null}
+      {notificationStatus === 'processed' ? (
+        <p className="status-success">
+          Cola procesada. Procesadas: {searchParams?.processed || '0'}, enviadas: {searchParams?.sent || '0'}, fallidas: {searchParams?.failed || '0'}.
+        </p>
+      ) : null}
       {notificationStatus === 'error' ? <p className="status-warning">{getNotificationMessage(notificationCode)}</p> : null}
 
       <section className="kpi-grid">
@@ -125,6 +130,20 @@ export default async function AdminNotificationsPage({
                 required
               />
             </div>
+            <div className="form-grid two">
+              <div className="stack-xs">
+                <label htmlFor="to">Email destino opcional</label>
+                <input id="to" name="to" type="email" className="input" placeholder="correo@dominio.com" />
+              </div>
+              <div className="stack-xs">
+                <label htmlFor="phoneE164">WhatsApp destino opcional</label>
+                <input id="phoneE164" name="phoneE164" className="input" placeholder="+57..." />
+              </div>
+            </div>
+            <div className="stack-xs">
+              <label htmlFor="subject">Asunto email opcional</label>
+              <input id="subject" name="subject" className="input" placeholder="TEATIME Academy" />
+            </div>
             <button type="submit" className="button-primary">
               Agregar a cola
             </button>
@@ -141,6 +160,13 @@ export default async function AdminNotificationsPage({
             estado, solo cambiamos Excel por una caja negra.
           </p>
           <div className="inline-actions">
+            <form action={processNotificationQueueAction}>
+              <input type="hidden" name="redirectPath" value="/admin/notifications" />
+              <input type="hidden" name="limit" value="20" />
+              <button type="submit" className="button-primary">
+                Procesar cola
+              </button>
+            </form>
             <a href="/admin/notifications" className="button-ghost">
               Ver todos
             </a>
