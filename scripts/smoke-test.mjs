@@ -11,6 +11,7 @@ const routes = [
   '/admin/weekly-closing',
   '/admin/templates',
   '/admin/users',
+  '/admin/audit',
   '/admin/notifications',
   '/admin/reports',
 ]

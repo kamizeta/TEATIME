@@ -492,6 +492,17 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  success   Boolean  @default(false)
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([success, createdAt])
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   actorId    String

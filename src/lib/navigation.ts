@@ -25,6 +25,7 @@ export function getNavigationForRole(role: AppRole): NavItem[] {
       { href: '/admin/notifications', label: 'Notificaciones', description: 'Mensajes pendientes y reintentos' },
       { href: '/admin/templates', label: 'Plantillas', description: 'Mensajes base por canal' },
       { href: '/admin/users', label: 'Usuarios', description: 'Roles, accesos y permisos' },
+      { href: '/admin/audit', label: 'Auditoría', description: 'Quién cambió qué y cuándo' },
       { href: '/admin/reports', label: 'Reportes', description: 'Cierre semanal y exportes' },
       { href: '/admin/settings', label: 'Ajustes', description: 'Reglas, políticas y configuración' },
     ]
