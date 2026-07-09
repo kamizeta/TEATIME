@@ -495,11 +495,14 @@ model Setting {
 model LoginAttempt {
   id        String   @id @default(cuid())
   email     String
+  ipHash    String?
+  userAgent String?
   success   Boolean  @default(false)
   reason    String?
   createdAt DateTime @default(now())
 
   @@index([email, createdAt])
+  @@index([ipHash, createdAt])
   @@index([success, createdAt])
 }
 

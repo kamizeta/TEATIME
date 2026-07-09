@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node --transpile-only prisma/seed.ts",
     "smoke": "node scripts/smoke-test.mjs",
-    "backup:json": "node scripts/backup-export.mjs"
+    "backup:json": "node scripts/backup-export.mjs",
+    "backup:pg": "node scripts/backup-pg-dump.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.17.0",

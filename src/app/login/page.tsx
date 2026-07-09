@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic'
 
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { loginAction } from '@/lib/actions/session'
 
 const demoUsers = [
   { role: 'Admin', email: 'admin@academy.test', password: 'admin123' },
@@ -23,7 +22,11 @@ export default function LoginPage() {
     setIsLoading(true)
     setError('')
     const fd = new FormData(e.currentTarget)
-    const result = await loginAction(fd)
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      body: fd,
+    })
+    const result = await response.json().catch(() => ({ ok: false, error: 'No se pudo iniciar sesión' }))
     if (!result.ok) {
       setIsLoading(false)
       return setError(result.error || 'No se pudo iniciar sesión')

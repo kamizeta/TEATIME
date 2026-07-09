@@ -16,6 +16,8 @@ const routes = [
   '/admin/reports',
 ]
 
+const advisoryRoutes = ['/api/readiness']
+
 function cookieHeaderFrom(response) {
   const setCookie = response.headers.get('set-cookie')
   if (!setCookie) return ''
@@ -51,6 +53,12 @@ async function main() {
     const ok = response.status >= 200 && response.status < 400
     console.log(`${ok ? 'OK' : 'FAIL'} ${response.status} ${route}`)
     if (!ok) failures.push(`${route} -> ${response.status}`)
+  }
+
+  for (const route of advisoryRoutes) {
+    const response = await fetch(`${baseUrl}${route}`)
+    const body = await response.json().catch(() => ({}))
+    console.log(`ADVISORY ${response.status} ${route} ok=${Boolean(body.ok)}`)
   }
 
   if (failures.length) {
