@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { requireRole } from '@/lib/auth'
@@ -6,7 +6,20 @@ import { prisma } from '@/lib/prisma'
 import { createManualClassAction } from '@/lib/actions'
 import { formatMinutesLabel } from '@/lib/booking'
 
-export default async function AdminDashboard() {
+function getOpsErrorMessage(code?: string) {
+  if (code === 'TEACHER_TIME_CONFLICT') return 'El profesor ya tiene una clase en ese horario.'
+  if (code === 'INSUFFICIENT_PACKAGE_BALANCE') return 'El paquete no tiene saldo suficiente para esa clase.'
+  if (code === 'INVALID_START_AT') return 'La fecha y hora de inicio no es válida.'
+  if (code === 'RELATED_ENTITY_NOT_FOUND') return 'Profesor, alumno o paquete no existen.'
+  if (code === 'MISSING_MANUAL_CLASS_FIELDS') return 'Faltan datos obligatorios para crear la clase.'
+  return 'No se pudo crear la clase manual.'
+}
+
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>
+}) {
   const session = await requireRole(['ADMIN', 'STAFF'])
   const total = await prisma.classEvent.count()
   const today = new Date()
@@ -70,6 +83,8 @@ export default async function AdminDashboard() {
     },
   })
 
+  const opsCode = typeof searchParams?.code === 'string' ? searchParams.code : ''
+
   return (
     <div className="page-stack">
       <section className="hero">
@@ -83,8 +98,12 @@ export default async function AdminDashboard() {
         <div className="toolbar">
           <Link href="/admin/calendar" className="button-primary">Ver calendario</Link>
           <Link href="/admin/reports" className="button-ghost">Abrir reportes</Link>
+          <Link href="/admin/packages" className="button-ghost">Abrir ledger</Link>
         </div>
       </section>
+
+      {searchParams?.ops === 'created' ? <p className="status-success">Clase manual creada y saldo reservado correctamente.</p> : null}
+      {searchParams?.ops === 'error' ? <p className="status-warning">{getOpsErrorMessage(opsCode)}</p> : null}
 
       <section className="kpi-grid">
         <article className="kpi-card">
@@ -123,6 +142,7 @@ export default async function AdminDashboard() {
             <h2>Crear clase manual</h2>
           </div>
           <form action={createManualClassAction} className="ops-form">
+            <input type="hidden" name="redirectPath" value="/admin/dashboard" />
             <div className="stack-xs">
               <label htmlFor="title">Título</label>
               <input id="title" name="title" className="input" defaultValue="Clase TEATIME" />

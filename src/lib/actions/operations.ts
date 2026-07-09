@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -8,8 +9,16 @@ function toLegacyHourUnits(minutes: number) {
   return Math.ceil(minutes / 60)
 }
 
+function withQuery(path: string, entries: Record<string, string>) {
+  const [pathname, query = ''] = path.split('?')
+  const params = new URLSearchParams(query)
+  for (const [key, value] of Object.entries(entries)) params.set(key, value)
+  return `${pathname}?${params.toString()}`
+}
+
 export async function createManualClassAction(formData: FormData) {
   const session = await requireRole(['ADMIN', 'STAFF'])
+  const redirectPath = String(formData.get('redirectPath') || '/admin/dashboard')
 
   const title = String(formData.get('title') || '').trim()
   const teacherId = String(formData.get('teacherId') || '')
@@ -19,10 +28,14 @@ export async function createManualClassAction(formData: FormData) {
   const meetUrl = String(formData.get('meetUrl') || '').trim()
   const classType = String(formData.get('classType') || 'ONE_ON_ONE') as 'ONE_ON_ONE' | 'GROUP'
 
-  if (!title || !teacherId || !packageId || !startAtRaw) throw new Error('MISSING_MANUAL_CLASS_FIELDS')
+  if (!title || !teacherId || !packageId || !startAtRaw) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'MISSING_MANUAL_CLASS_FIELDS' }))
+  }
 
   const startAt = new Date(startAtRaw)
-  if (isNaN(startAt.getTime())) throw new Error('INVALID_START_AT')
+  if (isNaN(startAt.getTime())) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'INVALID_START_AT' }))
+  }
   const endAt = new Date(startAt.getTime() + durationMinutes * 60 * 1000)
 
   const teacher = await prisma.teacher.findUnique({ where: { id: teacherId }, include: { user: true } })
@@ -31,7 +44,9 @@ export async function createManualClassAction(formData: FormData) {
     ? await prisma.student.findUnique({ where: { id: hourPackage.studentId }, include: { user: true } })
     : null
 
-  if (!teacher || !student || !hourPackage) throw new Error('RELATED_ENTITY_NOT_FOUND')
+  if (!teacher || !student || !hourPackage) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'RELATED_ENTITY_NOT_FOUND' }))
+  }
 
   const conflict = await prisma.classEvent.findFirst({
     where: {
@@ -42,10 +57,14 @@ export async function createManualClassAction(formData: FormData) {
     },
   })
 
-  if (conflict) throw new Error('TEACHER_TIME_CONFLICT')
+  if (conflict) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'TEACHER_TIME_CONFLICT' }))
+  }
 
   const availableMinutes = hourPackage.totalMinutes - hourPackage.usedMinutes - hourPackage.reservedMinutes
-  if (availableMinutes < durationMinutes) throw new Error('INSUFFICIENT_PACKAGE_BALANCE')
+  if (availableMinutes < durationMinutes) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'INSUFFICIENT_PACKAGE_BALANCE' }))
+  }
 
   await prisma.$transaction(async (tx) => {
     const createdClass = await tx.classEvent.create({
@@ -107,23 +126,29 @@ export async function createManualClassAction(formData: FormData) {
   revalidatePath('/admin/packages')
   revalidatePath('/student/home')
   revalidatePath('/teacher/today')
+  redirect(withQuery(redirectPath, { ops: 'created' }))
 }
 
 export async function adjustPackageMinutesAction(formData: FormData) {
   const session = await requireRole(['ADMIN', 'STAFF'])
+  const redirectPath = String(formData.get('redirectPath') || '/admin/packages')
 
   const packageId = String(formData.get('packageId') || '')
   const deltaMinutes = Number(formData.get('deltaMinutes') || 0)
   const note = String(formData.get('note') || '').trim()
 
-  if (!packageId || !deltaMinutes || !note) throw new Error('MISSING_PACKAGE_ADJUSTMENT_FIELDS')
+  if (!packageId || !deltaMinutes || !note) {
+    redirect(withQuery(redirectPath, { package: 'error', code: 'MISSING_PACKAGE_ADJUSTMENT_FIELDS' }))
+  }
 
   const hourPackage = await prisma.hourPackage.findUnique({ where: { id: packageId } })
-  if (!hourPackage) throw new Error('PACKAGE_NOT_FOUND')
+  if (!hourPackage) {
+    redirect(withQuery(redirectPath, { package: 'error', code: 'PACKAGE_NOT_FOUND' }))
+  }
 
   const nextTotalMinutes = hourPackage.totalMinutes + deltaMinutes
   if (nextTotalMinutes < hourPackage.usedMinutes + hourPackage.reservedMinutes) {
-    throw new Error('PACKAGE_TOTAL_WOULD_BELOW_COMMITTED')
+    redirect(withQuery(redirectPath, { package: 'error', code: 'PACKAGE_TOTAL_WOULD_BELOW_COMMITTED' }))
   }
 
   await prisma.$transaction(async (tx) => {
@@ -157,4 +182,5 @@ export async function adjustPackageMinutesAction(formData: FormData) {
 
   revalidatePath('/admin/packages')
   revalidatePath('/admin/dashboard')
+  redirect(withQuery(redirectPath, { package: 'adjusted' }))
 }

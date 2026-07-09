@@ -1,10 +1,21 @@
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
 import { formatMinutesLabel } from '@/lib/booking'
 import { adjustPackageMinutesAction } from '@/lib/actions'
 
-export default async function AdminPackages() {
+function getPackageErrorMessage(code?: string) {
+  if (code === 'PACKAGE_TOTAL_WOULD_BELOW_COMMITTED') return 'El ajuste dejaría el paquete por debajo de lo ya usado o reservado.'
+  if (code === 'PACKAGE_NOT_FOUND') return 'El paquete ya no existe.'
+  if (code === 'MISSING_PACKAGE_ADJUSTMENT_FIELDS') return 'Faltan datos obligatorios para ajustar el paquete.'
+  return 'No se pudo ajustar el paquete.'
+}
+
+export default async function AdminPackages({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>
+}) {
   const rows = await prisma.hourPackage.findMany({
     include: {
       student: {
@@ -41,11 +52,12 @@ export default async function AdminPackages() {
     orderBy: { classEvent: { startAt: 'desc' } },
     take: 40,
   })
+
   const ledgerRows = [
     ...enrollments.flatMap((enrollment) => {
-      const rows = []
+      const movementRows = []
       if (enrollment.reservedMinutes > 0) {
-        rows.push({
+        movementRows.push({
           key: `${enrollment.id}-reserve`,
           student: enrollment.student.user.name,
           packageId: enrollment.packageId,
@@ -56,7 +68,7 @@ export default async function AdminPackages() {
         })
       }
       if (enrollment.consumedMinutes > 0) {
-        rows.push({
+        movementRows.push({
           key: `${enrollment.id}-consume`,
           student: enrollment.student.user.name,
           packageId: enrollment.packageId,
@@ -67,7 +79,7 @@ export default async function AdminPackages() {
         })
       }
       if (enrollment.status === 'CANCELLED') {
-        rows.push({
+        movementRows.push({
           key: `${enrollment.id}-release`,
           student: enrollment.student.user.name,
           packageId: enrollment.packageId,
@@ -77,7 +89,7 @@ export default async function AdminPackages() {
           note: enrollment.classEvent.cancellations[0]?.reason || 'Cancelación operativa',
         })
       }
-      return rows
+      return movementRows
     }),
     ...adjustments.map((item) => {
       const after = item.after ? JSON.parse(item.after) : {}
@@ -103,12 +115,18 @@ export default async function AdminPackages() {
         </p>
       </section>
 
+      {searchParams?.package === 'adjusted' ? <p className="status-success">Paquete ajustado y ledger actualizado.</p> : null}
+      {searchParams?.package === 'error' ? (
+        <p className="status-warning">{getPackageErrorMessage(typeof searchParams?.code === 'string' ? searchParams.code : '')}</p>
+      ) : null}
+
       <section className="panel">
         <div className="card-header">
           <p className="eyebrow">Ajuste operativo</p>
           <h2>Modificar saldo total del paquete</h2>
         </div>
         <form action={adjustPackageMinutesAction} className="ops-form">
+          <input type="hidden" name="redirectPath" value="/admin/packages" />
           <div className="stack-xs">
             <label htmlFor="packageId">Paquete</label>
             <select id="packageId" name="packageId" className="select">
@@ -198,6 +216,13 @@ export default async function AdminPackages() {
             ))}
           </tbody>
         </table>
+      </section>
+
+      <section className="panel">
+        <div className="toolbar">
+          <a href="/api/reports/packages/export" className="button-primary">Descargar ledger CSV</a>
+          <a href="/api/reports/attendance/export" className="button-ghost">Descargar asistencia CSV</a>
+        </div>
       </section>
     </div>
   )
