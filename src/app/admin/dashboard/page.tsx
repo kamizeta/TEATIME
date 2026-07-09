@@ -12,6 +12,7 @@ function getOpsErrorMessage(code?: string) {
   if (code === 'INVALID_START_AT') return 'La fecha y hora de inicio no es válida.'
   if (code === 'RELATED_ENTITY_NOT_FOUND') return 'Profesor, alumno o paquete no existen.'
   if (code === 'MISSING_MANUAL_CLASS_FIELDS') return 'Faltan datos obligatorios para crear la clase.'
+  if (code === 'ONE_ON_ONE_REQUIRES_ONE_STUDENT') return 'Una clase 1:1 solo puede tener un alumno.'
   return 'No se pudo crear la clase manual.'
 }
 
@@ -158,14 +159,15 @@ export default async function AdminDashboard({
               </select>
             </div>
             <div className="stack-xs">
-              <label htmlFor="packageId">Alumno / paquete</label>
-              <select id="packageId" name="packageId" className="select">
+              <label htmlFor="packageIds">Alumnos / paquetes</label>
+              <select id="packageIds" name="packageIds" className="select multi-select" multiple>
                 {activePackages.map((pack) => (
                   <option key={pack.id} value={pack.id}>
                     {pack.student.user.name} · {formatMinutesLabel(pack.totalMinutes - pack.usedMinutes - pack.reservedMinutes)} libres
                   </option>
                 ))}
               </select>
+              <p className="hint">Selecciona uno para 1:1 o varios para grupal.</p>
             </div>
             <div className="stack-xs">
               <label htmlFor="startAt">Inicio</label>

@@ -6,7 +6,27 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { formatMinutesLabel } from '@/lib/booking'
 import { closeClassAction } from '@/lib/actions/booking'
-import { submitCancellationAction } from '@/lib/actions'
+import { addStudentToClassAction, rescheduleClassAction, submitCancellationAction } from '@/lib/actions'
+
+function toDateTimeLocalValue(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+function getOpsErrorMessage(code?: string) {
+  if (code === 'TEACHER_TIME_CONFLICT') return 'El profesor ya tiene una clase en ese horario.'
+  if (code === 'INSUFFICIENT_PACKAGE_BALANCE') return 'El paquete no tiene saldo suficiente para esa operación.'
+  if (code === 'INVALID_START_AT') return 'La fecha y hora de inicio no es válida.'
+  if (code === 'CLASS_NOT_EDITABLE') return 'La clase ya está cerrada o cancelada.'
+  if (code === 'CLASS_NOT_GROUP') return 'Solo puedes agregar alumnos manualmente a clases grupales.'
+  if (code === 'GROUP_CLASS_FULL') return 'La clase grupal ya está llena.'
+  if (code === 'STUDENT_ALREADY_BOOKED') return 'Ese alumno ya está inscrito en esta clase.'
+  return 'No se pudo completar la operación.'
+}
 
 export default async function ClassDetail({
   params,
@@ -26,6 +46,7 @@ export default async function ClassDetail({
           attendance: true,
         },
       },
+      teacher: { include: { user: true } },
       instructorAttendance: true,
       cancellations: {
         include: {
@@ -37,6 +58,20 @@ export default async function ClassDetail({
   })
 
   if (!ev) return notFound()
+
+  const teachers = await prisma.teacher.findMany({
+    include: { user: true },
+    orderBy: { user: { name: 'asc' } },
+  })
+  const activePackages = await prisma.hourPackage.findMany({
+    where: {
+      status: 'ACTIVE',
+      studentId: { notIn: ev.enrollments.map((enrollment) => enrollment.studentId) },
+    },
+    include: { student: { include: { user: true } } },
+    orderBy: { validTo: 'asc' },
+  })
+  const opsCode = typeof searchParams?.code === 'string' ? searchParams.code : ''
 
   return (
     <div className="page-stack">
@@ -66,6 +101,9 @@ export default async function ClassDetail({
           Cancelación rechazada. La ventana mínima es de {searchParams?.hours || '6'} horas para alumno o profesor.
         </p>
       ) : null}
+      {searchParams?.ops === 'rescheduled' ? <p className="status-success">Clase reagendada y reservas ajustadas.</p> : null}
+      {searchParams?.ops === 'student_added' ? <p className="status-success">Alumno agregado a la clase grupal y saldo reservado.</p> : null}
+      {searchParams?.ops === 'error' ? <p className="status-warning">{getOpsErrorMessage(opsCode)}</p> : null}
 
       <section className="panel">
         <div className="card-header">
@@ -80,6 +118,68 @@ export default async function ClassDetail({
           </form>
         </div>
       </section>
+
+      <section className="panel">
+        <div className="card-header">
+          <p className="eyebrow">Agenda</p>
+          <h2>Reagendar clase</h2>
+        </div>
+        <form action={rescheduleClassAction} className="ops-form">
+          <input type="hidden" name="classId" value={ev.id} />
+          <input type="hidden" name="redirectPath" value={`/admin/classes/${ev.id}`} />
+          <div className="stack-xs">
+            <label htmlFor="teacherId">Profesor</label>
+            <select id="teacherId" name="teacherId" className="select" defaultValue={ev.teacherId}>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="stack-xs">
+            <label htmlFor="startAt">Inicio</label>
+            <input id="startAt" name="startAt" type="datetime-local" className="input" defaultValue={toDateTimeLocalValue(new Date(ev.startAt))} />
+          </div>
+          <div className="stack-xs">
+            <label htmlFor="durationMinutes">Duración</label>
+            <select id="durationMinutes" name="durationMinutes" className="select" defaultValue={String(ev.durationMinutes || 60)}>
+              <option value="50">50 min</option>
+              <option value="60">60 min</option>
+              <option value="90">90 min</option>
+            </select>
+          </div>
+          <div className="stack-xs">
+            <label htmlFor="meetUrl">Meet URL</label>
+            <input id="meetUrl" name="meetUrl" className="input" defaultValue={ev.meetUrl || ''} />
+          </div>
+          <button type="submit" className="button-primary ops-span-2">Guardar reprogramación</button>
+        </form>
+      </section>
+
+      {ev.classType === 'GROUP' ? (
+        <section className="panel">
+          <div className="card-header">
+            <p className="eyebrow">Grupo</p>
+            <h2>Agregar alumno</h2>
+          </div>
+          <form action={addStudentToClassAction} className="ops-form">
+            <input type="hidden" name="classId" value={ev.id} />
+            <input type="hidden" name="redirectPath" value={`/admin/classes/${ev.id}`} />
+            <div className="stack-xs ops-span-2">
+              <label htmlFor="packageId">Alumno / paquete</label>
+              <select id="packageId" name="packageId" className="select">
+                {activePackages.map((pack) => (
+                  <option key={pack.id} value={pack.id}>
+                    {pack.student.user.name} · {formatMinutesLabel(pack.totalMinutes - pack.usedMinutes - pack.reservedMinutes)} libres
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button type="submit" className="button-ghost ops-span-2">Agregar y reservar saldo</button>
+          </form>
+        </section>
+      ) : null}
 
       <section className="panel">
         <div className="card-header">
@@ -123,6 +223,7 @@ export default async function ClassDetail({
               <th>Estado</th>
               <th>Reservado</th>
               <th>Consumido</th>
+              <th>Clase</th>
             </tr>
           </thead>
           <tbody>
@@ -133,6 +234,7 @@ export default async function ClassDetail({
                 <td>{en.attendance?.status || 'pendiente'}</td>
                 <td>{formatMinutesLabel(en.reservedMinutes || ev.durationMinutes || 60)}</td>
                 <td>{formatMinutesLabel(en.consumedMinutes || 0)}</td>
+                <td>{en.status}</td>
               </tr>
             ))}
           </tbody>

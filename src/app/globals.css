@@ -319,6 +319,18 @@ h3 {
   padding: 0 14px;
 }
 
+.multi-select {
+  min-height: 136px;
+  padding: 10px 14px;
+}
+
+.inline-form {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(140px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
 .textarea {
   min-height: 120px;
   padding: 12px 14px;

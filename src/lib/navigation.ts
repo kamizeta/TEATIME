@@ -17,6 +17,7 @@ export function getNavigationForRole(role: AppRole): NavItem[] {
     return [
       { href: '/admin/dashboard', label: 'Dashboard', description: 'Operación diaria y seguimiento' },
       { href: '/admin/calendar', label: 'Calendario', description: 'Clases, slots y agenda' },
+      { href: '/admin/students', label: 'Alumnos', description: 'Asignación de profesor y paquetes' },
       { href: '/admin/packages', label: 'Paquetes', description: 'Saldo y movimientos' },
       { href: '/admin/reports', label: 'Reportes', description: 'Cierre semanal y exportes' },
       { href: '/admin/settings', label: 'Ajustes', description: 'Reglas, políticas y configuración' },
