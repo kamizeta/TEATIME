@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { assignTeacherToStudentAction } from '@/lib/actions'
+import { assignTeacherToStudentAction, convertCrmContactToStudentAction } from '@/lib/actions'
 import { formatMinutesLabel } from '@/lib/booking'
 
 function getAssignmentErrorMessage(code?: string) {
@@ -34,6 +34,17 @@ export default async function AdminStudentsPage({
     include: { user: true },
     orderBy: { user: { name: 'asc' } },
   })
+  const convertibleContacts = await prisma.crmContact.findMany({
+    where: {
+      convertedStudentId: null,
+      email: { not: null },
+      status: { in: ['CONTACTED', 'TRIAL_SCHEDULED', 'ACTIVE_STUDENT'] },
+    },
+    orderBy: [{ status: 'desc' }, { updatedAt: 'desc' }],
+    take: 12,
+  })
+  const nextYear = new Date()
+  nextYear.setFullYear(nextYear.getFullYear() + 1)
   const assignCode = typeof searchParams?.code === 'string' ? searchParams.code : ''
 
   return (
@@ -48,8 +59,77 @@ export default async function AdminStudentsPage({
 
       {searchParams?.assign === 'ok' ? <p className="status-success">Profesor asignado al alumno.</p> : null}
       {searchParams?.assign === 'error' ? <p className="status-warning">{getAssignmentErrorMessage(assignCode)}</p> : null}
+      {searchParams?.crm === 'converted' ? <p className="status-success">Prospecto convertido a alumno real.</p> : null}
+
+      <section className="panel">
+        <div className="card-header">
+          <p className="eyebrow">Desde CRM</p>
+          <h2>Prospectos listos para convertir</h2>
+          <p className="hint">
+            Cambiar el estado a Alumno activo no crea alumno. Para que aparezca abajo, debes convertirlo: usuario,
+            paquete y profesor quedan creados en una sola acción.
+          </p>
+        </div>
+        {convertibleContacts.length ? (
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Prospecto</th>
+                  <th>Estado CRM</th>
+                  <th>Profesor</th>
+                  <th>Paquete inicial</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {convertibleContacts.map((contact) => (
+                  <tr key={contact.id}>
+                    <td>
+                      <strong>{contact.fullName}</strong>
+                      <small className="block-muted">{contact.email}</small>
+                    </td>
+                    <td>{contact.status}</td>
+                    <td>
+                      <form id={`convert-${contact.id}`} action={convertCrmContactToStudentAction} className="inline-form">
+                        <input type="hidden" name="redirectPath" value="/admin/students" />
+                        <input type="hidden" name="contactId" value={contact.id} />
+                        <select name="teacherId" className="select" required>
+                          <option value="">Seleccionar</option>
+                          {teachers.map((teacher) => (
+                            <option key={teacher.id} value={teacher.id}>
+                              {teacher.user.name}
+                            </option>
+                          ))}
+                        </select>
+                      </form>
+                    </td>
+                    <td>
+                      <div className="form-grid two">
+                        <input form={`convert-${contact.id}`} name="totalMinutes" type="number" min="30" step="30" className="input compact-input" defaultValue={1200} />
+                        <input form={`convert-${contact.id}`} name="validTo" type="date" className="input compact-input" defaultValue={nextYear.toISOString().slice(0, 10)} required />
+                      </div>
+                    </td>
+                    <td>
+                      <button form={`convert-${contact.id}`} type="submit" className="button-primary compact-button">
+                        Convertir
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="empty-state">No hay prospectos con email listos para convertir.</div>
+        )}
+      </section>
 
       <section className="panel table-panel">
+        <div className="card-header">
+          <p className="eyebrow">Alumnos reales</p>
+          <h2>Asignación de profesor</h2>
+        </div>
         <table>
           <thead>
             <tr>

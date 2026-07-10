@@ -209,7 +209,12 @@ export default async function AdminCrmPage({
                     </small>
                     {contact.notes ? <small className="block-muted clamp">{contact.notes}</small> : null}
                   </td>
-                  <td>{statusLabels[contact.status]}</td>
+                  <td>
+                    {statusLabels[contact.status]}
+                    {contact.status === 'ACTIVE_STUDENT' ? (
+                      <small className="block-muted">Estado comercial. Debe existir conversión para aparecer en Alumnos.</small>
+                    ) : null}
+                  </td>
                   <td>{sourceLabels[contact.source]}</td>
                   <td>
                     {contact.interestProgram || 'Sin programa'}
@@ -252,6 +257,11 @@ export default async function AdminCrmPage({
                           Pendiente WhatsApp
                         </button>
                       </form>
+                      {contact.status !== 'LOST' ? (
+                        <Link href={`/admin/crm/${contact.id}#conversion`} className="button-link compact-button">
+                          Convertir a alumno
+                        </Link>
+                      ) : null}
                     </div>
                   </td>
                 </tr>

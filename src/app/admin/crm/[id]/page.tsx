@@ -126,7 +126,7 @@ export default async function CrmContactDetailPage({
       {crmStatus === 'error' ? <p className="status-warning">{getCrmMessage(crmCode)}</p> : null}
 
       <div className="settings-grid">
-        <section className="panel settings-card">
+        <section id="conversion" className="panel settings-card">
           <div className="card-header">
             <p className="eyebrow">Resumen</p>
             <h2>Contexto comercial</h2>
