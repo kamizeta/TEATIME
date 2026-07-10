@@ -166,10 +166,13 @@ export async function convertCrmContactToStudentAction(formData: FormData) {
   const contactId = String(formData.get('contactId') || '')
   const redirectPath = String(formData.get('redirectPath') || `/admin/crm/${contactId}`)
   const teacherId = String(formData.get('teacherId') || '')
-  const totalMinutes = Number(formData.get('totalMinutes') || 1200)
+  const totalHoursRaw = formData.get('totalHours')
+  const totalMinutesRaw = formData.get('totalMinutes')
+  const totalHours = totalHoursRaw ? Number(totalHoursRaw) : Number(totalMinutesRaw || 1200) / 60
+  const totalMinutes = Math.round(totalHours * 60)
   const validToRaw = String(formData.get('validTo') || '')
 
-  if (!contactId || !teacherId || totalMinutes <= 0 || !validToRaw) {
+  if (!contactId || !teacherId || totalHours <= 0 || totalMinutes <= 0 || !validToRaw) {
     redirect(withQuery(redirectPath, { crm: 'error', code: 'MISSING_CONVERSION_FIELDS' }))
   }
 
@@ -218,7 +221,7 @@ export async function convertCrmContactToStudentAction(formData: FormData) {
     await tx.hourPackage.create({
       data: {
         studentId: createdStudent.id,
-        totalHours: Math.ceil(totalMinutes / 60),
+        totalHours: Math.ceil(totalHours),
         totalMinutes,
         validFrom: new Date(),
         validTo,

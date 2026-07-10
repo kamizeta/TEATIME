@@ -248,11 +248,11 @@ export default async function CrmContactDetailPage({
               </div>
               <div className="form-grid two">
                 <div className="stack-xs">
-                  <label htmlFor="totalMinutes">Minutos iniciales</label>
-                  <input id="totalMinutes" name="totalMinutes" type="number" min="30" step="30" className="input" defaultValue={1200} />
+                  <label htmlFor="totalHours">Horas iniciales</label>
+                  <input id="totalHours" name="totalHours" type="number" min="0.5" step="0.5" className="input" defaultValue={20} />
                 </div>
                 <div className="stack-xs">
-                  <label htmlFor="validTo">Válido hasta</label>
+                  <label htmlFor="validTo">Fecha de expiración de horas</label>
                   <input id="validTo" name="validTo" type="date" className="input" defaultValue={toDateValue(nextYear)} required />
                 </div>
               </div>

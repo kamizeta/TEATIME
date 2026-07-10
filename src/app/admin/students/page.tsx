@@ -106,9 +106,10 @@ export default async function AdminStudentsPage({
                     </td>
                     <td>
                       <div className="form-grid two">
-                        <input form={`convert-${contact.id}`} name="totalMinutes" type="number" min="30" step="30" className="input compact-input" defaultValue={1200} />
-                        <input form={`convert-${contact.id}`} name="validTo" type="date" className="input compact-input" defaultValue={nextYear.toISOString().slice(0, 10)} required />
+                        <input form={`convert-${contact.id}`} name="totalHours" type="number" min="0.5" step="0.5" className="input compact-input" defaultValue={20} aria-label="Horas iniciales" />
+                        <input form={`convert-${contact.id}`} name="validTo" type="date" className="input compact-input" defaultValue={nextYear.toISOString().slice(0, 10)} required aria-label="Fecha de expiración de horas" />
                       </div>
+                      <small className="block-muted">Horas iniciales · Fecha de expiración de horas</small>
                     </td>
                     <td>
                       <button form={`convert-${contact.id}`} type="submit" className="button-primary compact-button">
