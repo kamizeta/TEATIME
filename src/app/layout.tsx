@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { AppSidebar } from '@/components/app-sidebar'
 import { getSession } from '@/lib/auth'
 import { logoutAction } from '@/lib/actions/session'
 import { getDefaultRouteForRole, getNavigationForRole } from '@/lib/navigation'
@@ -13,6 +15,7 @@ export const metadata: Metadata = {
 async function submitLogout() {
   'use server'
   await logoutAction()
+  redirect('/login')
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -45,16 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
           <div className={session ? 'shell-grid' : 'shell-grid shell-grid-full'}>
             {session ? (
-              <aside className="sidebar">
-                <nav className="sidebar-nav">
-                  {nav.map((item) => (
-                    <Link key={item.href} href={item.href} className="sidebar-link">
-                      <span>{item.label}</span>
-                      <small>{item.description}</small>
-                    </Link>
-                  ))}
-                </nav>
-              </aside>
+              <AppSidebar nav={nav} role={session.role} />
             ) : null}
 
             <main className="content">{children}</main>

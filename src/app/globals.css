@@ -85,6 +85,9 @@ th {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  position: sticky;
+  top: clamp(12px, 1.4vw, 24px);
+  z-index: 20;
   margin-bottom: 20px;
   padding: 16px 20px;
   border: 1px solid rgba(219, 226, 234, 0.8);
@@ -154,11 +157,36 @@ th {
 }
 
 .sidebar {
+  position: sticky;
+  top: 142px;
+  max-height: calc(100vh - 164px);
+  overflow: auto;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
   box-shadow: var(--shadow);
+}
+
+.sidebar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 0 4px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar-heading strong {
+  color: var(--brand);
+  font-size: 0.72rem;
 }
 
 .sidebar-nav {
@@ -173,12 +201,23 @@ th {
   gap: 4px;
   padding: 12px 14px;
   border-radius: 18px;
-  transition: background 160ms ease, transform 160ms ease;
+  border: 1px solid transparent;
+  transition: background 160ms ease, transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .sidebar-link:hover {
   background: rgba(234, 84, 52, 0.08);
   transform: translateX(2px);
+}
+
+.sidebar-link-active {
+  background: linear-gradient(135deg, rgba(234, 84, 52, 0.16), rgba(110, 193, 228, 0.12));
+  border-color: rgba(234, 84, 52, 0.28);
+  box-shadow: inset 4px 0 0 var(--brand);
+}
+
+.sidebar-link-active span {
+  color: var(--brand);
 }
 
 .sidebar-link span {
@@ -764,6 +803,19 @@ h3 {
     max-width: 16ch;
     font-size: clamp(2.4rem, 8vw, 4rem);
   }
+
+  .sidebar {
+    position: sticky;
+    top: 112px;
+    z-index: 15;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .sidebar-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
 }
 
 @media (max-width: 720px) {
@@ -772,8 +824,24 @@ h3 {
   }
 
   .topbar {
+    position: static;
+    flex-direction: column;
+    align-items: flex-start;
     padding: 14px 16px;
     border-radius: 18px;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
+  .sidebar-link small {
+    display: none;
   }
 
   .brand-mark {
