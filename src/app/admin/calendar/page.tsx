@@ -188,13 +188,13 @@ export default async function AdminCalendarPage({
         </article>
       </section>
 
-      <section className="calendar-week">
+      <section className="calendar-board" aria-label="Calendario semanal">
         {days.map((day) => (
-          <article key={day.key} className="calendar-day">
+          <article key={day.key} className="calendar-column">
             <header className="calendar-day-header">
               <div>
-                <p className="eyebrow">Día</p>
-                <h2>{day.label}</h2>
+                <p className="calendar-weekday">{day.date.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
+                <h2>{day.date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}</h2>
               </div>
               <span className="status-pill">{day.items.length} clases</span>
             </header>
@@ -208,17 +208,21 @@ export default async function AdminCalendarPage({
                   const lastCancellation = event.cancellations[0]
 
                   return (
-                    <Link key={event.id} href={`/admin/classes/${event.id}`} className="calendar-event-card">
+                    <Link
+                      key={event.id}
+                      href={`/admin/classes/${event.id}`}
+                      className={`calendar-event-card calendar-event-${event.status.toLowerCase()}`}
+                    >
                       <div className="calendar-event-top">
                         <strong>{hourFormatter.format(new Date(event.startAt))}</strong>
                         <span className="status-pill">{event.status}</span>
                       </div>
                       <h3>{event.title}</h3>
-                      <p className="muted">Profesor: {event.teacher.user.name}</p>
-                      <p className="muted">
-                        Alumnos: {studentNames.length ? studentNames.join(', ') : 'Sin alumnos confirmados'}
+                      <p className="muted">Prof. {event.teacher.user.name}</p>
+                      <p className="muted">{studentNames.length ? studentNames.join(', ') : 'Sin alumnos confirmados'}</p>
+                      <p className={event.meetUrl ? 'calendar-meet-ok' : 'calendar-meet-missing'}>
+                        {event.meetUrl ? 'Meet listo' : 'Sin Meet'}
                       </p>
-                      <p className="muted">Meet: {event.meetUrl ? 'con link' : 'sin link'}</p>
                       {lastCancellation ? (
                         <p className="calendar-flag">
                           Última cancelación: {lastCancellation.wasAllowed ? 'aprobada' : 'rechazada'}
@@ -229,7 +233,7 @@ export default async function AdminCalendarPage({
                 })}
               </div>
             ) : (
-              <div className="empty-state">Sin clases para este día con los filtros actuales.</div>
+              <div className="calendar-empty">Sin clases</div>
             )}
           </article>
         ))}
