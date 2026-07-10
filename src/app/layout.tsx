@@ -43,7 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             ) : null}
           </header>
 
-          <div className="shell-grid">
+          <div className={session ? 'shell-grid' : 'shell-grid shell-grid-full'}>
             {session ? (
               <aside className="sidebar">
                 <nav className="sidebar-nav">
