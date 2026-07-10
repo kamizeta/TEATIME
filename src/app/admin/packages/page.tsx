@@ -7,7 +7,7 @@ import { adjustPackageMinutesAction } from '@/lib/actions'
 function getPackageErrorMessage(code?: string) {
   if (code === 'PACKAGE_TOTAL_WOULD_BELOW_COMMITTED') return 'El ajuste dejaría el paquete por debajo de lo ya usado o reservado.'
   if (code === 'PACKAGE_NOT_FOUND') return 'El paquete ya no existe.'
-  if (code === 'MISSING_PACKAGE_ADJUSTMENT_FIELDS') return 'Faltan datos obligatorios para ajustar el paquete.'
+  if (code === 'MISSING_PACKAGE_ADJUSTMENT_FIELDS') return 'Faltan datos obligatorios o las horas no son enteras.'
   return 'No se pudo ajustar el paquete.'
 }
 
@@ -111,7 +111,7 @@ export default async function AdminPackages({
         <p className="eyebrow">Packages</p>
         <h1 className="page-title">Paquetes y saldo real</h1>
         <p className="page-lead">
-          Esta vista ya usa minutos como fuente principal para soportar duraciones variables sin seguir mintiendo con horas enteras.
+          Esta vista muestra saldos en horas para operación. Internamente la app conserva minutos para soportar clases de 50, 60 o 90 minutos.
         </p>
       </section>
 
@@ -138,8 +138,8 @@ export default async function AdminPackages({
             </select>
           </div>
           <div className="stack-xs">
-            <label htmlFor="deltaMinutes">Delta minutos</label>
-            <input id="deltaMinutes" name="deltaMinutes" type="number" className="input" placeholder="60 o -60" />
+            <label htmlFor="deltaHours">Delta horas</label>
+            <input id="deltaHours" name="deltaHours" type="number" step="1" className="input" placeholder="2 o -2" />
           </div>
           <div className="stack-xs ops-span-2">
             <label htmlFor="note">Nota operativa</label>
@@ -199,7 +199,7 @@ export default async function AdminPackages({
               <th>Alumno</th>
               <th>Paquete</th>
               <th>Tipo</th>
-              <th>Minutos</th>
+              <th>Horas</th>
               <th>Nota</th>
             </tr>
           </thead>
@@ -210,7 +210,7 @@ export default async function AdminPackages({
                 <td>{row.student}</td>
                 <td>{row.packageId.slice(0, 8)}</td>
                 <td>{row.type}</td>
-                <td>{row.minutes > 0 ? formatMinutesLabel(row.minutes) : `${row.minutes} min`}</td>
+                <td>{row.minutes > 0 ? formatMinutesLabel(row.minutes) : `-${formatMinutesLabel(Math.abs(row.minutes))}`}</td>
                 <td>{row.note}</td>
               </tr>
             ))}

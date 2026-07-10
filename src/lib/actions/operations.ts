@@ -388,10 +388,13 @@ export async function adjustPackageMinutesAction(formData: FormData) {
   const redirectPath = String(formData.get('redirectPath') || '/admin/packages')
 
   const packageId = String(formData.get('packageId') || '')
-  const deltaMinutes = Number(formData.get('deltaMinutes') || 0)
+  const deltaHoursRaw = formData.get('deltaHours')
+  const deltaMinutesRaw = formData.get('deltaMinutes')
+  const deltaHours = deltaHoursRaw ? Number(deltaHoursRaw) : Number(deltaMinutesRaw || 0) / 60
+  const deltaMinutes = deltaHours * 60
   const note = String(formData.get('note') || '').trim()
 
-  if (!packageId || !deltaMinutes || !note) {
+  if (!packageId || !Number.isFinite(deltaHours) || !Number.isInteger(deltaHours) || !deltaMinutes || !note) {
     redirect(withQuery(redirectPath, { package: 'error', code: 'MISSING_PACKAGE_ADJUSTMENT_FIELDS' }))
   }
 
@@ -427,6 +430,7 @@ export async function adjustPackageMinutesAction(formData: FormData) {
         after: JSON.stringify({
           totalMinutes: nextTotalMinutes,
           totalHours: toLegacyHourUnits(nextTotalMinutes),
+          deltaHours,
           deltaMinutes,
           note,
         }),
