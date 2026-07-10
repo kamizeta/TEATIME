@@ -2,8 +2,9 @@ export const dynamic = 'force-dynamic'
 
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { assignTeacherToStudentAction, convertCrmContactToStudentAction } from '@/lib/actions'
+import { convertCrmContactToStudentAction } from '@/lib/actions'
 import { formatMinutesLabel } from '@/lib/booking'
+import { StudentAssignmentForm } from '@/components/student-assignment-form'
 
 function getAssignmentErrorMessage(code?: string) {
   if (code === 'RELATED_ENTITY_NOT_FOUND') return 'Alumno o profesor no existen.'
@@ -34,6 +35,7 @@ export default async function AdminStudentsPage({
     include: { user: true },
     orderBy: { user: { name: 'asc' } },
   })
+  const teacherOptions = teachers.map((teacher) => ({ id: teacher.id, name: teacher.user.name }))
   const convertibleContacts = await prisma.crmContact.findMany({
     where: {
       convertedStudentId: null,
@@ -156,20 +158,11 @@ export default async function AdminStudentsPage({
                   <td>{assignedTeacher?.user.name || 'Sin profesor'}</td>
                   <td>{activePackage ? formatMinutesLabel(availableMinutes) : 'Sin paquete activo'}</td>
                   <td>
-                    <form action={assignTeacherToStudentAction} className="inline-form">
-                      <input type="hidden" name="studentId" value={student.id} />
-                      <input type="hidden" name="redirectPath" value="/admin/students" />
-                      <select name="teacherId" className="select" defaultValue={assignedTeacher?.id || ''}>
-                        <option value="">Seleccionar</option>
-                        {teachers.map((teacher) => (
-                          <option key={teacher.id} value={teacher.id}>
-                            {teacher.user.name}
-                          </option>
-                        ))}
-                      </select>
-                      <input name="notes" className="input" placeholder="Nota" />
-                      <button type="submit" className="button-ghost">Asignar</button>
-                    </form>
+                    <StudentAssignmentForm
+                      studentId={student.id}
+                      currentTeacherId={assignedTeacher?.id || ''}
+                      teachers={teacherOptions}
+                    />
                   </td>
                 </tr>
               )
