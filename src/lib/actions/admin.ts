@@ -243,7 +243,8 @@ export async function createUserAction(formData: FormData) {
 
   revalidatePath('/admin/users')
   revalidatePath('/admin/students')
-  redirect(withQuery(`/admin/users?highlight=${user.id}`, { user: 'created' }))
+  revalidatePath('/admin/teachers')
+  redirect(withQuery(`${redirectPath}?highlight=${user.id}`, { user: 'created' }))
 }
 
 export async function updateUserAction(formData: FormData) {
@@ -274,6 +275,7 @@ export async function updateUserAction(formData: FormData) {
   })
 
   revalidatePath('/admin/users')
+  revalidatePath('/admin/teachers')
   redirect(withQuery(redirectPath, { user: 'updated' }))
 }
 
