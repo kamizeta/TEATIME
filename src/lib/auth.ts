@@ -38,7 +38,7 @@ export async function createSession(userId: string, role: AppRole) {
 }
 
 export async function clearSession() {
-  cookies().set(COOKIE_NAME, '', { path: '/', maxAge: 0 })
+  cookies().set(COOKIE_NAME, '', { path: '/', maxAge: 0, expires: new Date(0) })
 }
 
 export async function getSession() {
