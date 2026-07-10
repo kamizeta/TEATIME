@@ -481,10 +481,12 @@ h3 {
 
 .auth-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 420px);
-  gap: 24px;
-  align-items: stretch;
-  min-height: calc(100vh - 150px);
+  grid-template-columns: minmax(420px, 0.95fr) minmax(360px, 440px);
+  gap: 28px;
+  align-items: start;
+  max-width: 1120px;
+  min-height: calc(100vh - 190px);
+  margin: 0 auto;
 }
 
 .auth-hero,
@@ -495,14 +497,20 @@ h3 {
 .auth-hero {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  min-height: 520px;
   min-width: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(234, 84, 52, 0.11), rgba(110, 193, 228, 0.14)),
+    rgba(255, 255, 255, 0.9);
 }
 
 .auth-hero h1 {
-  max-width: 10ch;
-  font-size: clamp(3.3rem, 7vw, 5.6rem);
-  line-height: 0.98;
+  max-width: 12ch;
+  font-size: clamp(2.8rem, 5vw, 4.6rem);
+  line-height: 1;
+  overflow-wrap: anywhere;
 }
 
 .hero-copy {
@@ -516,6 +524,8 @@ h3 {
   width: 100%;
   max-width: 420px;
   justify-self: end;
+  position: sticky;
+  top: 24px;
 }
 
 .auth-card .card-header {
@@ -533,7 +543,7 @@ h3 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 22px;
 }
 
 .demo-card {
@@ -542,7 +552,7 @@ h3 {
   align-items: flex-start;
   gap: 6px;
   min-height: 88px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.96);
@@ -561,12 +571,12 @@ h3 {
 
 .demo-card strong {
   font-family: Montserrat, sans-serif;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
 }
 
 .demo-card span {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   line-height: 1.35;
   word-break: break-word;
 }
@@ -735,6 +745,16 @@ h3 {
   .auth-card {
     max-width: none;
     justify-self: stretch;
+    position: static;
+  }
+
+  .auth-hero {
+    min-height: auto;
+  }
+
+  .auth-hero h1 {
+    max-width: 16ch;
+    font-size: clamp(2.4rem, 8vw, 4rem);
   }
 }
 
@@ -768,7 +788,7 @@ h3 {
 
   .auth-hero h1 {
     max-width: none;
-    font-size: clamp(2.4rem, 14vw, 4rem);
+    font-size: clamp(2.05rem, 11vw, 3.2rem);
   }
 
   .hero-copy {

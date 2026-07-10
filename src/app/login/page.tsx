@@ -43,24 +43,6 @@ export default function LoginPage() {
           Este MVP ya separa roles, disponibilidad, reservas y control de saldo. La siguiente capa es la
           sincronización operativa con Google Calendar y Meet sin depender de hojas manuales.
         </p>
-        <div className="demo-grid">
-          {demoUsers.map((user) => (
-            <button
-              key={user.role}
-              type="button"
-              className="demo-card"
-              onClick={() => {
-                const form = document.querySelector('form')
-                if (!(form instanceof HTMLFormElement)) return
-                ;(form.elements.namedItem('email') as HTMLInputElement).value = user.email
-                ;(form.elements.namedItem('password') as HTMLInputElement).value = user.password
-              }}
-            >
-              <strong>{user.role}</strong>
-              <span>{user.email}</span>
-            </button>
-          ))}
-        </div>
       </section>
 
       <section className="auth-card">
@@ -83,6 +65,24 @@ export default function LoginPage() {
             {isLoading ? 'Entrando...' : 'Ingresar'}
           </button>
         </form>
+        <div className="demo-grid">
+          {demoUsers.map((user) => (
+            <button
+              key={user.role}
+              type="button"
+              className="demo-card"
+              onClick={() => {
+                const form = document.querySelector('form')
+                if (!(form instanceof HTMLFormElement)) return
+                ;(form.elements.namedItem('email') as HTMLInputElement).value = user.email
+                ;(form.elements.namedItem('password') as HTMLInputElement).value = user.password
+              }}
+            >
+              <strong>{user.role}</strong>
+              <span>{user.email}</span>
+            </button>
+          ))}
+        </div>
       </section>
     </div>
   )
