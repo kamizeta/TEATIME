@@ -131,6 +131,31 @@ th {
   gap: 12px;
 }
 
+.signed-in-profile {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-right: 4px;
+  text-align: right;
+}
+
+.signed-in-profile strong,
+.signed-in-profile span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signed-in-profile strong {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.signed-in-profile span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
 .role-pill,
 .status-pill {
   display: inline-flex;
@@ -1288,6 +1313,11 @@ h3 {
   .topbar-actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .signed-in-profile {
+    max-width: calc(100vw - 190px);
+    text-align: left;
   }
 
   .sidebar {

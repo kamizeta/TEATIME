@@ -5,6 +5,7 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { getSession } from '@/lib/auth'
 import { logoutAction } from '@/lib/actions/session'
 import { getDefaultRouteForRole, getNavigationForRole } from '@/lib/navigation'
+import { prisma } from '@/lib/prisma'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -28,6 +29,13 @@ async function submitLogout() {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
   const nav = session ? getNavigationForRole(session.role) : []
+  const signedInProfile =
+    session?.role === 'TEACHER' || session?.role === 'STUDENT'
+      ? await prisma.user.findUnique({
+          where: { id: session.userId },
+          select: { name: true, email: true },
+        })
+      : null
 
   return (
     <html lang="es">
@@ -43,6 +51,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
             {session ? (
               <div className="topbar-actions">
+                {signedInProfile ? (
+                  <div className="signed-in-profile" aria-label="Usuario autenticado">
+                    <strong>{signedInProfile.name}</strong>
+                    <span>{signedInProfile.email}</span>
+                  </div>
+                ) : null}
                 <span className="role-pill">{roleLabels[session.role] || session.role}</span>
                 <form action={submitLogout}>
                   <button type="submit" className="button-ghost">
