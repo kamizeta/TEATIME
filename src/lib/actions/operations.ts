@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { buildClassTitle, normalizeClassLanguage, syncClassTitle } from '@/lib/class-title'
 import { syncClassEventToGoogleCalendar } from '@/lib/google-calendar'
 
 function toLegacyHourUnits(minutes: number) {
@@ -21,7 +22,6 @@ export async function createManualClassAction(formData: FormData) {
   const session = await requireRole(['ADMIN', 'STAFF'])
   const redirectPath = String(formData.get('redirectPath') || '/admin/dashboard')
 
-  const title = String(formData.get('title') || '').trim()
   const teacherId = String(formData.get('teacherId') || '')
   const packageIds = formData
     .getAll('packageIds')
@@ -34,7 +34,7 @@ export async function createManualClassAction(formData: FormData) {
   const classType = String(formData.get('classType') || 'ONE_ON_ONE') as 'ONE_ON_ONE' | 'GROUP'
   const selectedPackageIds = packageIds.length ? packageIds : packageId ? [packageId] : []
 
-  if (!title || !teacherId || !selectedPackageIds.length || !startAtRaw) {
+  if (!teacherId || !selectedPackageIds.length || !startAtRaw) {
     redirect(withQuery(redirectPath, { ops: 'error', code: 'MISSING_MANUAL_CLASS_FIELDS' }))
   }
 
@@ -57,6 +57,17 @@ export async function createManualClassAction(formData: FormData) {
   if (classType === 'ONE_ON_ONE' && packages.length !== 1) {
     redirect(withQuery(redirectPath, { ops: 'error', code: 'ONE_ON_ONE_REQUIRES_ONE_STUDENT' }))
   }
+
+  const languages = [...new Set(packages.map((pack) => normalizeClassLanguage(pack.classLanguage)))]
+  if (languages.length !== 1) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'PACKAGE_LANGUAGE_MISMATCH' }))
+  }
+  const classLanguage = languages[0]
+  const title = buildClassTitle({
+    classLanguage,
+    studentNames: packages.map((pack) => pack.student.user.name),
+    teacherName: teacher.user.name,
+  })
 
   const conflict = await prisma.classEvent.findFirst({
     where: {
@@ -93,6 +104,7 @@ export async function createManualClassAction(formData: FormData) {
         teacherId,
         bookedById: session.userId,
         bookingSource: 'STAFF_MANUAL',
+        classLanguage,
       },
     })
 
@@ -238,6 +250,8 @@ export async function rescheduleClassAction(formData: FormData) {
       }
     }
 
+    await syncClassTitle(tx, classId)
+
     await tx.auditLog.create({
       data: {
         actorId: session.userId,
@@ -317,6 +331,7 @@ export async function addStudentToClassAction(formData: FormData) {
         reservedHours: { increment: toLegacyHourUnits(durationMinutes) },
       },
     })
+    await syncClassTitle(tx, classId)
     await tx.auditLog.create({
       data: {
         actorId: session.userId,

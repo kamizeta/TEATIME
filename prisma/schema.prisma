@@ -250,6 +250,7 @@ model HourPackage {
   status     String   @default("ACTIVE")
   allowedClassTypes String @default("ONE_ON_ONE,GROUP")
   allowedDurations  String @default("50,60,90")
+  classLanguage     String @default("Inglés")
 
   student     Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
   enrollments ClassEnrollment[]
@@ -270,6 +271,7 @@ model ClassEvent {
   teacherId     String
   bookedById    String?
   bookingSource String?
+  classLanguage String      @default("Inglés")
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 

@@ -106,6 +106,7 @@ async function main() {
           validTo: new Date('2026-12-31'),
           allowedClassTypes: 'ONE_ON_ONE,GROUP',
           allowedDurations: '50,60,90',
+          classLanguage: 'Inglés',
         },
       })
     : await prisma.hourPackage.create({
@@ -122,6 +123,7 @@ async function main() {
           status: 'ACTIVE',
           allowedClassTypes: 'ONE_ON_ONE,GROUP',
           allowedDurations: '50,60,90',
+          classLanguage: 'Inglés',
         },
       })
 
@@ -197,7 +199,8 @@ async function main() {
   const classEvent = await prisma.classEvent.upsert({
     where: { googleEventId: 'evt_demo_1' },
     update: {
-      title: 'Clase de Inglés - Demo',
+      title: 'Clase Inglés TEA TIME - Juan Pérez - Prof. María López',
+      classLanguage: 'Inglés',
       startAt,
       endAt,
       meetUrl: 'https://meet.google.com/demo-clase',
@@ -205,7 +208,8 @@ async function main() {
     },
     create: {
       googleEventId: 'evt_demo_1',
-      title: 'Clase de Inglés - Demo',
+      title: 'Clase Inglés TEA TIME - Juan Pérez - Prof. María López',
+      classLanguage: 'Inglés',
       startAt,
       endAt,
       meetUrl: 'https://meet.google.com/demo-clase',

@@ -1,5 +1,6 @@
 import type { AppRole } from '@/lib/navigation'
 import { prisma } from '@/lib/prisma'
+import { syncClassTitle } from '@/lib/class-title'
 import { buildLedgerReleaseUpdate } from '@/lib/package-ledger'
 import { syncClassEventToGoogleCalendar } from '@/lib/google-calendar'
 
@@ -148,6 +149,8 @@ export async function requestCancellation(input: {
       data: { status: 'CANCELED' },
     })
   })
+
+  await syncClassTitle(prisma, classId)
 
   const updatedClass = await prisma.classEvent.findUnique({ where: { id: classId }, include: { enrollments: true } })
   const shouldCancelGoogleEvent =

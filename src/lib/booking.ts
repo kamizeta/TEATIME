@@ -1,5 +1,6 @@
 import { ClassType, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { buildClassTitle, normalizeClassLanguage, syncClassTitle } from '@/lib/class-title'
 import { syncClassEventToGoogleCalendar } from '@/lib/google-calendar'
 
 type PrimaryBookingContext = {
@@ -20,6 +21,7 @@ type PrimaryBookingContext = {
     reservedMinutes: number
     allowedClassTypes: string
     allowedDurations: string
+    classLanguage: string
   }
   bookingRule: {
     minimumNoticeHours: number
@@ -197,6 +199,7 @@ export async function getPrimaryBookingContextForUser(userId: string): Promise<P
       reservedMinutes: activePackage.reservedMinutes,
       allowedClassTypes: activePackage.allowedClassTypes,
       allowedDurations: activePackage.allowedDurations,
+      classLanguage: activePackage.classLanguage,
     },
     bookingRule: {
       minimumNoticeHours: bookingRule.minimumNoticeHours,
@@ -392,14 +395,18 @@ export async function createBookingForStudent(userId: string, slotToken: string)
     if (classEvent && classEvent.classType === 'GROUP' && classEvent.enrollments.length >= classEvent.capacity) {
       throw new Error('GROUP_CLASS_FULL')
     }
+    if (classEvent && normalizeClassLanguage(classEvent.classLanguage) !== normalizeClassLanguage(pack.classLanguage)) {
+      throw new Error('PACKAGE_LANGUAGE_MISMATCH')
+    }
 
     if (!classEvent) {
       classEvent = await tx.classEvent.create({
         data: {
-          title:
-            slot.classType === 'GROUP'
-              ? `Clase grupal con ${context.teacher.userName}`
-              : `Clase 1:1 con ${context.teacher.userName}`,
+          title: buildClassTitle({
+            classLanguage: context.package.classLanguage,
+            studentNames: [context.student.userName],
+            teacherName: context.teacher.userName,
+          }),
           startAt,
           endAt,
           timezone: 'America/Bogota',
@@ -410,6 +417,7 @@ export async function createBookingForStudent(userId: string, slotToken: string)
           teacherId: context.teacher.id,
           bookedById: userId,
           bookingSource: 'STUDENT',
+          classLanguage: normalizeClassLanguage(context.package.classLanguage),
         },
         include: { enrollments: true },
       })
@@ -444,6 +452,8 @@ export async function createBookingForStudent(userId: string, slotToken: string)
         reservedMinutes: { increment: slot.durationMinutes },
       },
     })
+
+    await syncClassTitle(tx, classEvent.id)
 
     return classEvent
   })

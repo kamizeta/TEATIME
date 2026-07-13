@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { ContactSource, ContactStatus, CrmActivityStatus, CrmActivityType, NotificationStatus, UserRole } from '@prisma/client'
 import { hashPassword, requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { normalizeClassLanguage } from '@/lib/class-title'
 
 function withQuery(path: string, entries: Record<string, string>) {
   const [pathname, query = ''] = path.split('?')
@@ -171,6 +172,7 @@ export async function convertCrmContactToStudentAction(formData: FormData) {
   const totalHours = totalHoursRaw ? Number(totalHoursRaw) : Number(totalMinutesRaw || 1200) / 60
   const totalMinutes = Math.round(totalHours * 60)
   const validToRaw = String(formData.get('validTo') || '')
+  const classLanguage = normalizeClassLanguage(String(formData.get('classLanguage') || 'Inglés'))
 
   if (!contactId || !teacherId || totalHours <= 0 || totalMinutes <= 0 || !validToRaw) {
     redirect(withQuery(redirectPath, { crm: 'error', code: 'MISSING_CONVERSION_FIELDS' }))
@@ -228,6 +230,7 @@ export async function convertCrmContactToStudentAction(formData: FormData) {
         status: 'ACTIVE',
         allowedClassTypes: 'ONE_ON_ONE,GROUP',
         allowedDurations: '50,60,90',
+        classLanguage,
       },
     })
     await tx.studentTeacherAssignment.create({

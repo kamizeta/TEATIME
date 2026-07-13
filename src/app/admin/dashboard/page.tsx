@@ -14,6 +14,7 @@ function getOpsErrorMessage(code?: string) {
   if (code === 'INVALID_START_AT') return 'La fecha y hora de inicio no es válida.'
   if (code === 'RELATED_ENTITY_NOT_FOUND') return 'Profesor, alumno o paquete no existen.'
   if (code === 'MISSING_MANUAL_CLASS_FIELDS') return 'Faltan datos obligatorios para crear la clase.'
+  if (code === 'PACKAGE_LANGUAGE_MISMATCH') return 'Todos los paquetes de una clase grupal deben tener el mismo idioma.'
   if (code === 'ONE_ON_ONE_REQUIRES_ONE_STUDENT') return 'Una clase 1:1 solo puede tener un alumno.'
   return 'No se pudo crear la clase manual.'
 }
@@ -200,10 +201,6 @@ export default async function AdminDashboard({
           <form action={createManualClassAction} className="ops-form">
             <input type="hidden" name="redirectPath" value="/admin/dashboard" />
             <div className="stack-xs">
-              <label htmlFor="title">Título</label>
-              <input id="title" name="title" className="input" defaultValue="Clase TEATIME" />
-            </div>
-            <div className="stack-xs">
               <label htmlFor="teacherId">Profesor</label>
               <select id="teacherId" name="teacherId" className="select">
                 {teachers.map((teacher) => (
@@ -218,7 +215,7 @@ export default async function AdminDashboard({
               <select id="packageIds" name="packageIds" className="select multi-select" multiple>
                 {activePackages.map((pack) => (
                   <option key={pack.id} value={pack.id}>
-                    {pack.student.user.name} · {formatMinutesLabel(pack.totalMinutes - pack.usedMinutes - pack.reservedMinutes)} libres
+                    {pack.student.user.name} · {pack.classLanguage} · {formatMinutesLabel(pack.totalMinutes - pack.usedMinutes - pack.reservedMinutes)} libres
                   </option>
                 ))}
               </select>
