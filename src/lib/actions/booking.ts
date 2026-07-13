@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { createAvailabilityBlockForTeacher, createBookingForStudent } from '@/lib/booking'
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { buildLedgerConsumeUpdate, buildLedgerReleaseUpdate, shouldConsumeAttendance } from '@/lib/package-ledger'
+import { settleClassLedger } from '@/lib/class-closing'
 
 const AvailabilitySchema = z.object({
   weekday: z.coerce.number().int().min(0).max(6),
@@ -124,49 +124,7 @@ export async function closeClassAction(formData: FormData) {
     redirect(`/admin/classes/${classId}?ops=error&code=MISSING_ATTENDANCE`)
   }
 
-  await prisma.$transaction(async (tx) => {
-    for (const enrollment of confirmedEnrollments) {
-      const reservedMinutes = enrollment.reservedMinutes
-      const attendanceStatus = enrollment.attendance?.status
-
-      if (reservedMinutes <= 0) continue
-
-      if (attendanceStatus && shouldConsumeAttendance(attendanceStatus)) {
-        await tx.hourPackage.update({
-          where: { id: enrollment.packageId },
-          data: buildLedgerConsumeUpdate(reservedMinutes),
-        })
-
-        await tx.classEnrollment.update({
-          where: { id: enrollment.id },
-          data: {
-            consumedMinutes: reservedMinutes,
-            consumedHours: Math.ceil(reservedMinutes / 60),
-            reservedMinutes: 0,
-            reservedHours: 0,
-          },
-        })
-      } else {
-        await tx.hourPackage.update({
-          where: { id: enrollment.packageId },
-          data: buildLedgerReleaseUpdate(reservedMinutes),
-        })
-
-        await tx.classEnrollment.update({
-          where: { id: enrollment.id },
-          data: {
-            reservedMinutes: 0,
-            reservedHours: 0,
-          },
-        })
-      }
-    }
-
-    await tx.classEvent.update({
-      where: { id: classId },
-      data: { status: 'COMPLETED' },
-    })
-  })
+  await settleClassLedger(classId)
 
   revalidatePath(`/admin/classes/${classId}`)
   revalidatePath('/admin/dashboard')

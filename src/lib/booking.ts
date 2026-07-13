@@ -432,7 +432,7 @@ export async function createBookingForStudent(userId: string, slotToken: string)
   await assertSlotMatchesActiveAvailability(prisma, context, slot, startAt, endAt)
 
   const bookedClass = await prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${`${context.teacher.id}:${startAt.toISOString()}`}))`
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`${context.teacher.id}:${startAt.toISOString()}`}))`
     await assertSlotMatchesActiveAvailability(tx, context, slot, startAt, endAt)
 
     const pack = await tx.hourPackage.findUnique({ where: { id: context.package.id } })
