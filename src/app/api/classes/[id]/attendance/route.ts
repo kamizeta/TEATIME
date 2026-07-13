@@ -10,13 +10,14 @@ const Body = z.object({
   status: z.enum(['attended', 'absent', 'late', 'no_show']),
 })
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireRole(['ADMIN', 'TEACHER'])
+    const { id } = await params
     const { studentId, status } = Body.parse(await req.json())
 
     const classEvent = await prisma.classEvent.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { teacher: true },
     })
     if (!classEvent) return NextResponse.json({ ok: false, error: 'Clase no encontrada' }, { status: 404 })
@@ -28,15 +29,15 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     const enrollment = await prisma.classEnrollment.findUnique({
-      where: { classEventId_studentId: { classEventId: params.id, studentId } },
+      where: { classEventId_studentId: { classEventId: id, studentId } },
       include: { package: true }
     })
     if (!enrollment) return NextResponse.json({ ok: false, error: 'Matrícula inválida' }, { status: 404 })
 
     await prisma.attendanceRecord.upsert({
-      where: { classEventId_studentId: { classEventId: params.id, studentId } },
+      where: { classEventId_studentId: { classEventId: id, studentId } },
       update: { status, markedBy: session.userId, markedAt: new Date() },
-      create: { classEventId: params.id, studentId, status, markedBy: session.userId },
+      create: { classEventId: id, studentId, status, markedBy: session.userId },
     })
 
     return NextResponse.json({ ok: true })

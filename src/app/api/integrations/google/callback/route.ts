@@ -14,11 +14,12 @@ export async function GET(req: Request) {
     const error = searchParams.get('error')
     const code = searchParams.get('code')
     const state = searchParams.get('state')
+    const cookieStore = await cookies()
 
-    if (!isGoogleOAuthStateValid(cookies().get(GOOGLE_OAUTH_STATE_COOKIE)?.value, state)) {
+    if (!isGoogleOAuthStateValid(cookieStore.get(GOOGLE_OAUTH_STATE_COOKIE)?.value, state)) {
       return NextResponse.redirect(new URL('/admin/settings?google_error=invalid_oauth_state', baseUrl))
     }
-    cookies().delete(GOOGLE_OAUTH_STATE_COOKIE)
+    cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE)
 
     if (error) {
       return NextResponse.redirect(new URL(`/admin/settings?google_error=${encodeURIComponent(error)}`, baseUrl))

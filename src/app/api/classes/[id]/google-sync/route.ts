@@ -3,18 +3,19 @@ import { requireRole } from '@/lib/auth'
 import { syncClassEventToGoogleCalendar } from '@/lib/google-calendar'
 import { prisma } from '@/lib/prisma'
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireRole(['ADMIN'])
+  const { id } = await params
   const body = await request.json().catch(() => ({}))
   const operation = body.operation === 'cancel' ? 'cancel' : 'upsert'
-  const result = await syncClassEventToGoogleCalendar(params.id, operation)
+  const result = await syncClassEventToGoogleCalendar(id, operation)
 
   await prisma.auditLog.create({
     data: {
       actorId: session.userId,
       action: operation === 'cancel' ? 'GOOGLE_CLASS_CANCEL_SYNC_REQUESTED' : 'GOOGLE_CLASS_SYNC_REQUESTED',
       entityType: 'CLASS_EVENT',
-      entityId: params.id,
+      entityId: id,
       after: JSON.stringify(result),
     },
   })

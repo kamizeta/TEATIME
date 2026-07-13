@@ -10,13 +10,14 @@ const Body = z.object({
   scope: z.enum(['SELF', 'CLASS']).optional(),
 })
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireRole(['ADMIN', 'STAFF', 'TEACHER', 'STUDENT'])
+    const { id } = await params
     const { reason, scope } = Body.parse(await req.json())
 
     const result = await requestCancellation({
-      classId: params.id,
+      classId: id,
       userId: session.userId,
       role: session.role,
       reason,

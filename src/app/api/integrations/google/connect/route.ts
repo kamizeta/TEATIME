@@ -15,7 +15,8 @@ export async function GET() {
     }
 
     const state = createGoogleOAuthState()
-    cookies().set(GOOGLE_OAUTH_STATE_COOKIE, state, {
+    const cookieStore = await cookies()
+    cookieStore.set(GOOGLE_OAUTH_STATE_COOKIE, state, {
       path: '/',
       httpOnly: true,
       sameSite: 'lax',

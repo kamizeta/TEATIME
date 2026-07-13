@@ -31,7 +31,8 @@ export async function createSession(userId: string, role: AppRole) {
     .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
     .sign(sessionSecret())
 
-  cookies().set(COOKIE_NAME, token, {
+  const cookieStore = await cookies()
+  cookieStore.set(COOKIE_NAME, token, {
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
@@ -41,11 +42,13 @@ export async function createSession(userId: string, role: AppRole) {
 }
 
 export async function clearSession() {
-  cookies().set(COOKIE_NAME, '', { path: '/', maxAge: 0, expires: new Date(0) })
+  const cookieStore = await cookies()
+  cookieStore.set(COOKIE_NAME, '', { path: '/', maxAge: 0, expires: new Date(0) })
 }
 
 export async function getSession() {
-  const token = cookies().get(COOKIE_NAME)?.value
+  const cookieStore = await cookies()
+  const token = cookieStore.get(COOKIE_NAME)?.value
   if (!token) return null
 
   try {
