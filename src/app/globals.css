@@ -678,6 +678,81 @@ h3 {
   white-space: nowrap;
 }
 
+.teachers-table-panel {
+  overflow-x: auto;
+}
+
+.teacher-directory-table {
+  min-width: 1680px;
+  table-layout: fixed;
+}
+
+.teacher-directory-table th:nth-child(1) { width: 15%; }
+.teacher-directory-table th:nth-child(2) { width: 18%; }
+.teacher-directory-table th:nth-child(3) { width: 14%; }
+.teacher-directory-table th:nth-child(4) { width: 8%; }
+.teacher-directory-table th:nth-child(5) { width: 13%; }
+.teacher-directory-table th:nth-child(6) { width: 8%; }
+.teacher-directory-table th:nth-child(7) { width: 14%; }
+.teacher-directory-table th:nth-child(8) { width: 10%; }
+
+.teacher-directory-table .compact-input {
+  min-width: 0;
+}
+
+.teacher-row-summary {
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.teacher-directory-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.teacher-directory-actions .button-link,
+.teacher-directory-actions .button-ghost,
+.teacher-directory-actions .button-primary {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.teacher-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.teacher-detail-table {
+  min-width: 1050px;
+}
+
+.teacher-availability-list {
+  display: grid;
+  gap: 10px;
+}
+
+.teacher-availability-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff, rgba(242, 245, 248, 0.72));
+}
+
+.teacher-availability-item > div:last-child,
+.teacher-availability-item > small:last-child {
+  text-align: right;
+}
+
+.teacher-exceptions-heading {
+  margin-top: 28px;
+}
+
 .schedule-heading {
   display: flex;
   align-items: flex-start;
@@ -1042,7 +1117,8 @@ h3 {
   .shell-grid,
   .settings-grid,
   .auth-shell,
-  .ops-grid {
+  .ops-grid,
+  .teacher-detail-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1150,6 +1226,16 @@ h3 {
   .meet-link-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .teacher-availability-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .teacher-availability-item > div:last-child,
+  .teacher-availability-item > small:last-child {
+    text-align: left;
   }
 
   th,

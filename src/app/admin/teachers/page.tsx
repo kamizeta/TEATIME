@@ -2,10 +2,11 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { UserRole } from '@prisma/client'
-import { createUserAction, updateUserAction } from '@/lib/actions'
+import { createUserAction } from '@/lib/actions'
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { DirtySubmitButton } from '@/components/dirty-submit-button'
+import { TeacherDirectoryRow } from '@/components/teacher-directory-row'
 
 function getMessage(code: string) {
   const messages: Record<string, string> = {
@@ -59,9 +60,6 @@ export default async function AdminTeachersPage({
           Aquí se crean profesores y se revisa si tienen alumnos asignados, disponibilidad y próximas clases.
         </p>
         <div className="inline-actions">
-          <Link href="/teacher/availability" className="button-ghost">
-            Ver disponibilidad como profesor
-          </Link>
           <Link href="/admin/students" className="button-link">
             Asignar alumnos
           </Link>
@@ -108,70 +106,60 @@ export default async function AdminTeachersPage({
         </section>
       ) : null}
 
-      <section className="panel table-panel">
+      <section className="panel table-panel teachers-table-panel">
         <div className="card-header">
           <p className="eyebrow">Profesores actuales</p>
           <h2>{teachers.length} docentes</h2>
         </div>
-        <table>
+        <table className="teacher-directory-table">
           <thead>
             <tr>
-              <th>Profesor</th>
+              <th>Nombre y apellido</th>
+              <th>Correo electrónico</th>
+              <th>WhatsApp</th>
+              <th>Estado</th>
               <th>Alumnos asignados</th>
               <th>Disponibilidad</th>
               <th>Próximas clases</th>
-              <th>Estado</th>
-              <th>Editar</th>
+              <th className="teacher-directory-actions">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {teachers.map((teacher) => (
+            {teachers.map((teacher) => canEdit ? (
+              <TeacherDirectoryRow
+                key={teacher.id}
+                teacher={{
+                  id: teacher.id,
+                  userId: teacher.user.id,
+                  name: teacher.user.name,
+                  email: teacher.user.email,
+                  phoneE164: teacher.user.phoneE164,
+                  isActive: teacher.user.isActive,
+                  studentNames: teacher.studentAssignments.map((assignment) => assignment.student.user.name),
+                  availabilityCount: teacher.availabilityBlocks.length,
+                  nextClass: teacher.classEvents[0] ? {
+                    title: teacher.classEvents[0].title,
+                    startsAt: teacher.classEvents[0].startAt.toISOString(),
+                  } : null,
+                }}
+              />
+            ) : (
               <tr key={teacher.id}>
-                <td>
-                  <strong>{teacher.user.name}</strong>
-                  <small className="block-muted">{teacher.user.email} · {teacher.user.phoneE164 || 'sin teléfono'}</small>
-                  <small className="block-muted">{teacher.timezone}</small>
-                </td>
-                <td>
-                  <strong>{teacher.studentAssignments.length}</strong>
-                  <small className="block-muted">
-                    {teacher.studentAssignments.slice(0, 3).map((assignment) => assignment.student.user.name).join(', ') || 'Sin alumnos'}
-                  </small>
-                </td>
-                <td>
-                  <strong>{teacher.availabilityBlocks.length}</strong>
-                  <small className="block-muted">bloques activos</small>
-                </td>
-                <td>
-                  <strong>{teacher.classEvents.length}</strong>
-                  <small className="block-muted">
-                    {teacher.classEvents[0] ? teacher.classEvents[0].startAt.toLocaleString('es-CO') : 'Sin próximas clases'}
-                  </small>
-                </td>
+                <td>{teacher.user.name}</td>
+                <td>{teacher.user.email}</td>
+                <td>{teacher.user.phoneE164 || 'Sin teléfono'}</td>
                 <td>{teacher.user.isActive ? 'Activo' : 'Inactivo'}</td>
-                <td>
-                  {canEdit ? (
-                    <form action={updateUserAction} className="inline-form">
-                      <input type="hidden" name="redirectPath" value="/admin/teachers" />
-                      <input type="hidden" name="userId" value={teacher.user.id} />
-                      <input name="name" className="input compact-input" defaultValue={teacher.user.name} />
-                      <input name="phoneE164" className="input compact-input" defaultValue={teacher.user.phoneE164 || ''} />
-                      <label className="check-row">
-                        <input type="checkbox" name="isActive" defaultChecked={teacher.user.isActive} /> Activo
-                      </label>
-                      <DirtySubmitButton className="compact-button">
-                        Guardar
-                      </DirtySubmitButton>
-                    </form>
-                  ) : (
-                    'Solo lectura'
-                  )}
+                <td>{teacher.studentAssignments.map((assignment) => assignment.student.user.name).join(', ') || 'Sin alumnos'}</td>
+                <td>{teacher.availabilityBlocks.length} bloques</td>
+                <td>{teacher.classEvents[0] ? teacher.classEvents[0].startAt.toLocaleString('es-CO') : 'Sin próximas clases'}</td>
+                <td className="teacher-directory-actions">
+                  <Link href={`/admin/teachers/${teacher.id}`} className="button-link compact-button">Ver detalle</Link>
                 </td>
               </tr>
             ))}
             {!teachers.length ? (
               <tr>
-                <td colSpan={6}>No hay profesores creados.</td>
+                <td colSpan={8}>No hay profesores creados.</td>
               </tr>
             ) : null}
           </tbody>
