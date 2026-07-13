@@ -6,6 +6,7 @@ import { convertCrmContactToStudentAction } from '@/lib/actions'
 import { formatMinutesLabel } from '@/lib/booking'
 import { DirtySubmitButton } from '@/components/dirty-submit-button'
 import { StudentAssignmentForm } from '@/components/student-assignment-form'
+import { UserAccessActions } from '@/components/user-access-actions'
 import { contactStatusLabels } from '@/lib/display-labels'
 
 function getAssignmentErrorMessage(code?: string) {
@@ -19,7 +20,8 @@ export default async function AdminStudentsPage({
 }: {
   searchParams?: Record<string, string | string[] | undefined>
 }) {
-  await requireRole(['ADMIN', 'STAFF'])
+  const session = await requireRole(['ADMIN', 'STAFF'])
+  const canManageAccess = session.role === 'ADMIN'
 
   const students = await prisma.student.findMany({
     include: {
@@ -152,6 +154,7 @@ export default async function AdminStudentsPage({
               <th>Profesor actual</th>
               <th>Saldo disponible</th>
               <th>Nueva asignación</th>
+              <th>Acceso al portal</th>
             </tr>
           </thead>
           <tbody>
@@ -175,6 +178,7 @@ export default async function AdminStudentsPage({
                       teachers={teacherOptions}
                     />
                   </td>
+                  <td>{canManageAccess ? <UserAccessActions userId={student.user.id} role="STUDENT" /> : 'Solo administrador'}</td>
                 </tr>
               )
             })}

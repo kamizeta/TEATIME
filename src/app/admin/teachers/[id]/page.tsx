@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { requireRole } from '@/lib/auth'
 import { getWeekdayLabel } from '@/lib/booking'
 import { prisma } from '@/lib/prisma'
+import { UserAccessActions } from '@/components/user-access-actions'
 
 const statusLabels: Record<string, string> = {
   SCHEDULED: 'Programada',
@@ -14,7 +15,7 @@ const statusLabels: Record<string, string> = {
 }
 
 export default async function AdminTeacherDetailPage({ params }: { params: { id: string } }) {
-  await requireRole(['ADMIN', 'STAFF'])
+  const session = await requireRole(['ADMIN', 'STAFF'])
   const now = new Date()
   const teacher = await prisma.teacher.findUnique({
     where: { id: params.id },
@@ -74,6 +75,7 @@ export default async function AdminTeacherDetailPage({ params }: { params: { id:
         <div className="inline-actions">
           <Link href="/admin/teachers" className="button-ghost">Volver a profesores</Link>
           <Link href="/admin/students" className="button-link">Asignar alumnos</Link>
+          {session.role === 'ADMIN' ? <UserAccessActions userId={teacher.user.id} role="TEACHER" /> : null}
         </div>
       </section>
 
