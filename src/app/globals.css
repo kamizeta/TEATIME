@@ -641,29 +641,26 @@ h3 {
 }
 
 .user-directory-table {
-  min-width: 1180px;
+  min-width: 1360px;
   table-layout: fixed;
 }
 
-.user-directory-table th:nth-child(1) { width: 23%; }
+.user-directory-table th:nth-child(1) { width: 18%; }
 .user-directory-table th:nth-child(2) { width: 8%; }
-.user-directory-table th:nth-child(3) { width: 28%; }
-.user-directory-table th:nth-child(4) { width: 31%; }
-.user-directory-table th:nth-child(5) { width: 10%; }
+.user-directory-table th:nth-child(3) { width: 19%; }
+.user-directory-table th:nth-child(4) { width: 14%; }
+.user-directory-table th:nth-child(5) { width: 8%; }
+.user-directory-table th:nth-child(6) { width: 23%; }
+.user-directory-table th:nth-child(7) { width: 10%; }
 
-.user-edit-fields,
+.user-directory-table .compact-input {
+  min-width: 0;
+}
+
 .user-permission-controls {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.user-edit-fields .compact-input:first-child {
-  width: 170px;
-}
-
-.user-edit-fields .compact-input:nth-child(2) {
-  width: 150px;
 }
 
 .user-active-toggle,

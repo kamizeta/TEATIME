@@ -26,6 +26,7 @@ type UserDirectoryRowProps = {
 
 export function UserDirectoryRow({ user, roleLabel }: UserDirectoryRowProps) {
   const [name, setName] = useState(user.name)
+  const [email, setEmail] = useState(user.email)
   const [phoneE164, setPhoneE164] = useState(user.phoneE164 || '')
   const [isActive, setIsActive] = useState(user.isActive)
   const [permissions, setPermissions] = useState({
@@ -37,7 +38,7 @@ export function UserDirectoryRow({ user, roleLabel }: UserDirectoryRowProps) {
 
   const userFormId = `user-update-${user.id}`
   const permissionFormId = `staff-permissions-${user.id}`
-  const hasUserChanges = name.trim() !== user.name || phoneE164.trim() !== (user.phoneE164 || '') || isActive !== user.isActive
+  const hasUserChanges = name.trim() !== user.name || email.trim().toLowerCase() !== user.email || phoneE164 !== (user.phoneE164 || '') || isActive !== user.isActive
   const hasPermissionChanges = user.role === 'STAFF' && (
     permissions.canManageUsers !== (user.staffPermission?.canManageUsers || false) ||
     permissions.canManageRules !== (user.staffPermission?.canManageRules || false) ||
@@ -52,40 +53,57 @@ export function UserDirectoryRow({ user, roleLabel }: UserDirectoryRowProps) {
           <input type="hidden" name="redirectPath" value="/admin/users" />
           <input type="hidden" name="userId" value={user.id} />
         </form>
-        <strong>{user.name}</strong>
-        <small className="block-muted">{user.email} · {user.phoneE164 || 'sin teléfono'}</small>
+        <input
+          form={userFormId}
+          name="name"
+          className="input compact-input"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          aria-label={`Nombre y apellido de ${user.name}`}
+        />
         {user.studentCode ? <small className="block-muted">{user.studentCode}</small> : null}
       </td>
       <td>{roleLabel}</td>
       <td>
-        <div className="user-edit-fields">
+        <input
+          form={userFormId}
+          name="email"
+          type="email"
+          className="input compact-input"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          aria-label={`Correo electrónico de ${user.name}`}
+          required
+        />
+      </td>
+      <td>
+        <input
+          form={userFormId}
+          name="phoneE164"
+          type="tel"
+          inputMode="tel"
+          pattern="[+0-9]*"
+          className="input compact-input"
+          value={phoneE164}
+          onChange={(event) => {
+            const value = event.target.value.trim()
+            const digits = value.replace(/\D/g, '')
+            setPhoneE164(value.startsWith('+') ? `+${digits}` : digits)
+          }}
+          aria-label={`WhatsApp de ${user.name}`}
+        />
+      </td>
+      <td>
+        <label className="check-row user-active-toggle">
           <input
             form={userFormId}
-            name="name"
-            className="input compact-input"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            aria-label={`Nombre de ${user.name}`}
+            type="checkbox"
+            name="isActive"
+            checked={isActive}
+            onChange={(event) => setIsActive(event.target.checked)}
           />
-          <input
-            form={userFormId}
-            name="phoneE164"
-            className="input compact-input"
-            value={phoneE164}
-            onChange={(event) => setPhoneE164(event.target.value)}
-            aria-label={`Teléfono de ${user.name}`}
-          />
-          <label className="check-row user-active-toggle">
-            <input
-              form={userFormId}
-              type="checkbox"
-              name="isActive"
-              checked={isActive}
-              onChange={(event) => setIsActive(event.target.checked)}
-            />
-            Activo
-          </label>
-        </div>
+          Activo
+        </label>
       </td>
       <td>
         {user.role === 'STAFF' ? (

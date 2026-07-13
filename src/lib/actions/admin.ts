@@ -252,24 +252,32 @@ export async function updateUserAction(formData: FormData) {
   const redirectPath = String(formData.get('redirectPath') || '/admin/users')
   const userId = String(formData.get('userId') || '')
   const name = String(formData.get('name') || '').trim()
-  const phoneE164 = String(formData.get('phoneE164') || '').trim()
+  const rawPhoneE164 = String(formData.get('phoneE164') || '').trim()
+  const phoneDigits = rawPhoneE164.replace(/\D/g, '')
+  const phoneE164 = rawPhoneE164.startsWith('+') ? `+${phoneDigits}` : phoneDigits
   const isActive = formData.get('isActive') === 'on'
 
   if (!userId || !name) redirect(withQuery(redirectPath, { user: 'error', code: 'MISSING_USER_FIELDS' }))
 
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) redirect(withQuery(redirectPath, { user: 'error', code: 'USER_NOT_FOUND' }))
+  const email = formData.has('email') ? String(formData.get('email') || '').trim().toLowerCase() : user.email
+
+  if (!email) redirect(withQuery(redirectPath, { user: 'error', code: 'MISSING_USER_FIELDS' }))
+
+  const emailOwner = await prisma.user.findFirst({ where: { email, NOT: { id: userId } } })
+  if (emailOwner) redirect(withQuery(redirectPath, { user: 'error', code: 'EMAIL_ALREADY_EXISTS' }))
 
   await prisma.$transaction(async (tx) => {
-    await tx.user.update({ where: { id: userId }, data: { name, phoneE164: phoneE164 || null, isActive } })
+    await tx.user.update({ where: { id: userId }, data: { name, email, phoneE164: phoneE164 || null, isActive } })
     await tx.auditLog.create({
       data: {
         actorId: session.userId,
         action: 'USER_UPDATED',
         entityType: 'USER',
         entityId: userId,
-        before: JSON.stringify({ name: user.name, phoneE164: user.phoneE164, isActive: user.isActive }),
-        after: JSON.stringify({ name, phoneE164, isActive }),
+        before: JSON.stringify({ name: user.name, email: user.email, phoneE164: user.phoneE164, isActive: user.isActive }),
+        after: JSON.stringify({ name, email, phoneE164, isActive }),
       },
     })
   })

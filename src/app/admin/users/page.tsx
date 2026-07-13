@@ -105,7 +105,15 @@ export default async function UsersPage({
         </div>
         <table className="user-directory-table">
           <thead>
-            <tr><th>Usuario</th><th>Rol</th><th>Datos y estado</th><th>Permisos staff</th><th className="user-directory-action">Acción</th></tr>
+            <tr>
+              <th>Nombre y apellido</th>
+              <th>Rol</th>
+              <th>Correo electrónico</th>
+              <th>WhatsApp</th>
+              <th>Estado</th>
+              <th>Permisos staff</th>
+              <th className="user-directory-action">Acción</th>
+            </tr>
           </thead>
           <tbody>
             {users.map((user) => canEdit ? (
@@ -125,8 +133,10 @@ export default async function UsersPage({
               />
             ) : (
               <tr key={user.id}>
-                <td><strong>{user.name}</strong><small className="block-muted">{user.email} · {user.phoneE164 || 'sin teléfono'}</small></td>
+                <td><strong>{user.name}</strong><small className="block-muted">{user.studentProfile?.studentCode || ''}</small></td>
                 <td>{roleLabels[user.role]}</td>
+                <td>{user.email}</td>
+                <td>{user.phoneE164 || 'sin teléfono'}</td>
                 <td>{user.isActive ? 'Activo' : 'Inactivo'}</td>
                 <td>{user.role === 'STAFF' ? 'Staff' : 'No aplica'}</td>
                 <td className="user-directory-action">Solo lectura</td>
