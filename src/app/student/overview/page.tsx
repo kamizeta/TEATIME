@@ -99,22 +99,17 @@ export default async function StudentOverview({
               <th>Inicio</th>
               <th>Estado clase</th>
               <th>Asistencia</th>
-              <th>Estado actual</th>
               <th>Acción</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => {
-              const trace = formatPackageProgress(row.package.totalMinutes, row.package.usedMinutes, row.package.reservedMinutes)
               return (
                 <tr key={row.id}>
                   <td>{row.classEvent.title}</td>
                   <td>{new Date(row.classEvent.startAt).toLocaleString('es-CO')}</td>
                   <td>{classStatusLabels[row.classEvent.status] || row.classEvent.status}</td>
                   <td>{row.attendance?.status ? attendanceLabels[row.attendance.status] || row.attendance.status : 'Pendiente'}</td>
-                  <td>
-                    <strong>{trace}</strong>
-                  </td>
                   <td>
                     {row.status !== 'CONFIRMED' || row.classEvent.status === 'CANCELED' || row.classEvent.status === 'COMPLETED' ? (
                       <span className="muted">Sin acción</span>
