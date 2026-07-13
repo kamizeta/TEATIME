@@ -8,6 +8,7 @@ import { formatMinutesLabel } from '@/lib/booking'
 import { closeClassAction } from '@/lib/actions/booking'
 import { addStudentToClassAction, rescheduleClassAction, submitCancellationAction, syncClassWithGoogleAction } from '@/lib/actions'
 import { DirtySubmitButton } from '@/components/dirty-submit-button'
+import { attendanceStatusLabels, classStatusLabels, enrollmentStatusLabels } from '@/lib/display-labels'
 
 function toDateTimeLocalValue(date: Date) {
   const year = date.getFullYear()
@@ -88,7 +89,7 @@ export default async function ClassDetail({
           {new Date(ev.startAt).toLocaleString('es-CO')} - {new Date(ev.endAt).toLocaleString('es-CO')}
         </p>
         <div className="metric-row">
-          <span className="status-pill">Estado: {ev.status}</span>
+          <span className="status-pill">Estado: {classStatusLabels[ev.status] || ev.status}</span>
           <span className="status-pill">Duración: {formatMinutesLabel(ev.durationMinutes ?? 60)}</span>
           <span className="status-pill">Tipo: {ev.classType === 'GROUP' ? 'Grupal' : '1:1'}</span>
         </div>
@@ -185,8 +186,8 @@ export default async function ClassDetail({
                 <tbody>
                   {ev.enrollments.map((en) => (
                     <tr key={en.id}>
-                      <td>{en.student.user.name}</td><td>{en.package.id.slice(0, 8)}</td><td>{en.attendance?.status || 'pendiente'}</td>
-                      <td>{formatMinutesLabel(en.reservedMinutes || ev.durationMinutes || 60)}</td><td>{formatMinutesLabel(en.consumedMinutes || 0)}</td><td>{en.status}</td>
+                      <td>{en.student.user.name}</td><td>{en.package.id.slice(0, 8)}</td><td>{attendanceStatusLabels[en.attendance?.status || 'pending'] || 'Pendiente'}</td>
+                      <td>{formatMinutesLabel(en.reservedMinutes || ev.durationMinutes || 60)}</td><td>{formatMinutesLabel(en.consumedMinutes || 0)}</td><td>{enrollmentStatusLabels[en.status] || en.status}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -231,9 +232,9 @@ export default async function ClassDetail({
                 <input type="hidden" name="redirectPath" value={`/admin/classes/${ev.id}`} />
                 <div className="stack-xs">
                   <label htmlFor="reason">Motivo operativo</label>
-                  <textarea id="reason" name="reason" className="textarea" defaultValue={session?.role === 'STAFF' ? 'Clase cancelada por staff desde operación.' : 'Clase cancelada desde administración.'} />
+                  <textarea id="reason" name="reason" className="textarea" defaultValue={session?.role === 'STAFF' ? 'Clase cancelada por el equipo operativo.' : 'Clase cancelada desde administración.'} />
                 </div>
-                <p className="hint">Alumno y profesor respetan la ventana mínima. Staff y admin pueden overridear cuando la operación lo exige.</p>
+                <p className="hint">Alumno y profesor respetan la ventana mínima. El equipo operativo y el administrador pueden aplicar una excepción cuando la operación lo exige.</p>
                 <button type="submit" className="button-ghost">Cancelar clase completa</button>
               </form>
             )}

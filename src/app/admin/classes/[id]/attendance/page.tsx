@@ -22,7 +22,7 @@ export default async function AttendancePage({ params }: { params: { id: string 
   return (
     <div className="page-stack">
       <section className="hero">
-        <p className="eyebrow">Attendance</p>
+        <p className="eyebrow">Asistencia</p>
         <h1 className="page-title">Registrar asistencia</h1>
         <p className="page-lead">
           Marca la asistencia sin usar IDs manuales. Esto ya está conectado al cierre real de saldo.

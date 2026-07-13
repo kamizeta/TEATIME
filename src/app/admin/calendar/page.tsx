@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { DirtySubmitButton } from '@/components/dirty-submit-button'
+import { classStatusLabels } from '@/lib/display-labels'
 
 function startOfWeek(date: Date) {
   const copy = new Date(date)
@@ -120,7 +121,7 @@ export default async function AdminCalendarPage({
         <p className="eyebrow">Calendario operativo</p>
         <h1 className="page-title">Semana de operación TEATIME</h1>
         <p className="page-lead">
-          Aquí staff y admin ven la carga semanal, filtran por profesor y detectan rápido clases canceladas, reservas
+          Aquí el equipo operativo y el administrador ven la carga semanal, filtran por profesor y detectan rápido clases canceladas, reservas
           activas y huecos operativos.
         </p>
         <div className="toolbar">
@@ -161,10 +162,10 @@ export default async function AdminCalendarPage({
             <label htmlFor="status">Estado</label>
             <select id="status" name="status" className="select" defaultValue={statusFilter}>
               <option value="">Todos</option>
-              <option value="SCHEDULED">Scheduled</option>
-              <option value="RESERVED">Reserved</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELED">Canceled</option>
+              <option value="SCHEDULED">Programada</option>
+              <option value="RESERVED">Reservada</option>
+              <option value="COMPLETED">Finalizada</option>
+              <option value="CANCELED">Cancelada</option>
             </select>
           </div>
           <div className="stack-xs">
@@ -216,7 +217,7 @@ export default async function AdminCalendarPage({
                     >
                       <div className="calendar-event-top">
                         <strong>{hourFormatter.format(new Date(event.startAt))}</strong>
-                        <span className="status-pill">{event.status}</span>
+                        <span className="status-pill">{classStatusLabels[event.status] || event.status}</span>
                       </div>
                       <h3>{event.title}</h3>
                       <p className="muted">Prof. {event.teacher.user.name}</p>

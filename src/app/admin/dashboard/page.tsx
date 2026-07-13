@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { createManualClassAction } from '@/lib/actions'
 import { formatMinutesLabel } from '@/lib/booking'
 import { DirtySubmitButton } from '@/components/dirty-submit-button'
+import { classStatusLabels } from '@/lib/display-labels'
 
 function getOpsErrorMessage(code?: string) {
   if (code === 'TEACHER_TIME_CONFLICT') return 'El profesor ya tiene una clase en ese horario.'
@@ -112,19 +113,19 @@ export default async function AdminDashboard({
   return (
     <div className="page-stack">
       <section className="hero">
-        <p className="eyebrow">Operations</p>
+        <p className="eyebrow">Operación</p>
         <h1 className="page-title">Tablero operativo</h1>
         <p className="page-lead">
           {session.role === 'ADMIN'
             ? 'Vista global para dirección y operación académica.'
-            : 'Vista operativa de staff para primeras reservas, incidencias y seguimiento diario.'}
+            : 'Vista del equipo operativo para primeras reservas, incidencias y seguimiento diario.'}
         </p>
         <div className="toolbar">
           <Link href="/admin/calendar" className="button-primary">Ver calendario</Link>
           <Link href="/admin/weekly-closing" className="button-ghost">Cierre semanal</Link>
           <Link href="/admin/incidents" className="button-ghost">Incidencias</Link>
           <Link href="/admin/reports" className="button-ghost">Abrir reportes</Link>
-          <Link href="/admin/packages" className="button-ghost">Abrir ledger</Link>
+          <Link href="/admin/packages" className="button-ghost">Abrir libro de saldos</Link>
         </div>
       </section>
 
@@ -305,7 +306,7 @@ export default async function AdminDashboard({
                 <td>{event.teacher.user.name}</td>
                 <td>{event.enrollments.map((item) => item.student.user.name).join(', ') || 'Sin alumno'}</td>
                 <td>{new Date(event.startAt).toLocaleString('es-CO')}</td>
-                <td><span className="status-pill">{event.status}</span></td>
+                <td><span className="status-pill">{classStatusLabels[event.status] || event.status}</span></td>
                 <td><Link href={`/admin/classes/${event.id}`}>Ver detalle</Link></td>
               </tr>
             ))}

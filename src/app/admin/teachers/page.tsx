@@ -84,7 +84,7 @@ export default async function AdminTeachersPage({
       {result === 'created' ? <p className="status-success">Profesor creado.</p> : null}
       {result === 'updated' ? <p className="status-success">Profesor actualizado.</p> : null}
       {result === 'error' ? <p className="status-warning">{getMessage(code)}</p> : null}
-      {!canEdit ? <p className="status-warning">Staff puede revisar profesores, pero solo admin puede crear o editar.</p> : null}
+      {!canEdit ? <p className="status-warning">El equipo operativo puede revisar profesores, pero solo el administrador puede crear o editar.</p> : null}
 
       {canEdit ? (
         <section className="panel">

@@ -4,8 +4,8 @@ import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 const demoUsers = [
-  { role: 'Admin', email: 'admin@academy.test', password: 'admin123' },
-  { role: 'Staff', email: 'staff@academy.test', password: 'staff123' },
+  { role: 'Administrador', email: 'admin@academy.test', password: 'admin123' },
+  { role: 'Equipo operativo', email: 'staff@academy.test', password: 'staff123' },
   { role: 'Profesor', email: 'profesor@academy.test', password: 'prof123' },
   { role: 'Alumno', email: 'alumno@academy.test', password: 'alumno123' },
 ] as const

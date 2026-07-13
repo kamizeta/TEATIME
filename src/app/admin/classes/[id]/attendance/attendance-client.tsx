@@ -77,7 +77,7 @@ export default function AttendanceClient({
                   <option value="attended">Asistió</option>
                   <option value="late">Tardanza</option>
                   <option value="absent">Ausente</option>
-                  <option value="no_show">No show</option>
+                  <option value="no_show">No asistió</option>
                 </select>
               </td>
               <td>

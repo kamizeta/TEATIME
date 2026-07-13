@@ -6,6 +6,7 @@ import { convertCrmContactToStudentAction } from '@/lib/actions'
 import { formatMinutesLabel } from '@/lib/booking'
 import { DirtySubmitButton } from '@/components/dirty-submit-button'
 import { StudentAssignmentForm } from '@/components/student-assignment-form'
+import { contactStatusLabels } from '@/lib/display-labels'
 
 function getAssignmentErrorMessage(code?: string) {
   if (code === 'RELATED_ENTITY_NOT_FOUND') return 'Alumno o profesor no existen.'
@@ -56,7 +57,7 @@ export default async function AdminStudentsPage({
         <p className="eyebrow">Alumnos</p>
         <h1 className="page-title">Asignación de profesor</h1>
         <p className="page-lead">
-          Staff puede dejar la relación alumno-profesor lista para reservas, primeras clases asistidas y seguimiento de paquetes.
+          El equipo operativo puede dejar la relación alumno-profesor lista para reservas, primeras clases asistidas y seguimiento de paquetes.
         </p>
       </section>
 
@@ -92,7 +93,7 @@ export default async function AdminStudentsPage({
                       <strong>{contact.fullName}</strong>
                       <small className="block-muted">{contact.email}</small>
                     </td>
-                    <td>{contact.status}</td>
+                    <td>{contactStatusLabels[contact.status] || contact.status}</td>
                     <td>
                       <form id={`convert-${contact.id}`} action={convertCrmContactToStudentAction} className="inline-form">
                         <input type="hidden" name="redirectPath" value="/admin/students" />

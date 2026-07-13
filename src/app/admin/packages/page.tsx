@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { formatMinutesLabel } from '@/lib/booking'
 import { adjustPackageMinutesAction } from '@/lib/actions'
 import { DirtySubmitButton } from '@/components/dirty-submit-button'
+import { packageStatusLabels } from '@/lib/display-labels'
 
 function getPackageErrorMessage(code?: string) {
   if (code === 'PACKAGE_TOTAL_WOULD_BELOW_COMMITTED') return 'El ajuste dejaría el paquete por debajo de lo ya usado o reservado.'
@@ -178,7 +179,7 @@ export default async function AdminPackages({
                   <td>{formatMinutesLabel(pack.reservedMinutes)}</td>
                   <td>{formatMinutesLabel(pack.usedMinutes)}</td>
                   <td>{formatMinutesLabel(availableMinutes)}</td>
-                  <td>{pack.status}</td>
+                  <td>{packageStatusLabels[pack.status] || pack.status}</td>
                   <td>{new Date(pack.validFrom).toLocaleDateString('es-CO')}</td>
                   <td>{new Date(pack.validTo).toLocaleDateString('es-CO')}</td>
                 </tr>

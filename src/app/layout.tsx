@@ -6,18 +6,12 @@ import { getSession } from '@/lib/auth'
 import { logoutAction } from '@/lib/actions/session'
 import { getDefaultRouteForRole, getNavigationForRole } from '@/lib/navigation'
 import { prisma } from '@/lib/prisma'
+import { roleLabels } from '@/lib/display-labels'
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'TEATIME Ops',
   description: 'Operación académica, asistencia y reservas',
-}
-
-const roleLabels: Record<string, string> = {
-  ADMIN: 'Admin',
-  STAFF: 'Staff',
-  TEACHER: 'Profesor',
-  STUDENT: 'Alumno',
 }
 
 async function submitLogout() {
@@ -46,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Link href={session ? getDefaultRouteForRole(session.role) : '/login'} className="brand-mark">
                 TEATIME Ops
               </Link>
-              <span className="brand-subtitle">Academy Operations Console</span>
+              <span className="brand-subtitle">Consola de operación académica</span>
             </div>
 
             {session ? (

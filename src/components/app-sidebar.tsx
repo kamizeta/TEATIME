@@ -3,18 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { AppRole } from '@/lib/navigation'
+import { roleLabels } from '@/lib/display-labels'
 
 type NavItem = {
   href: string
   label: string
   description: string
-}
-
-const roleLabels: Record<AppRole, string> = {
-  ADMIN: 'Admin',
-  STAFF: 'Staff',
-  TEACHER: 'Profesor',
-  STUDENT: 'Alumno',
 }
 
 export function AppSidebar({ nav, role }: { nav: NavItem[]; role: AppRole }) {

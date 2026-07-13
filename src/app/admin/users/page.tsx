@@ -6,13 +6,7 @@ import { createUserAction } from '@/lib/actions'
 import { UserDirectoryRow } from '@/components/user-directory-row'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-
-const roleLabels: Record<UserRole, string> = {
-  ADMIN: 'Admin',
-  STAFF: 'Staff',
-  TEACHER: 'Profesor',
-  STUDENT: 'Alumno',
-}
+import { roleLabels } from '@/lib/display-labels'
 
 function getMessage(code: string) {
   const messages: Record<string, string> = {
@@ -52,7 +46,7 @@ export default async function UsersPage({
         <p className="eyebrow">Usuarios y permisos</p>
         <h1 className="page-title">Accesos de TEATIME Ops</h1>
         <p className="page-lead">
-          Admin crea profesores, staff y alumnos. Staff puede revisar, pero solo admin cambia permisos.
+          El administrador crea profesores, equipo operativo y alumnos. El equipo operativo puede revisar, pero solo el administrador cambia permisos.
         </p>
       </section>
 
@@ -60,7 +54,7 @@ export default async function UsersPage({
       {result === 'updated' ? <p className="status-success">Usuario actualizado.</p> : null}
       {result === 'permissions' ? <p className="status-success">Permisos actualizados.</p> : null}
       {result === 'error' ? <p className="status-warning">{getMessage(code)}</p> : null}
-      {!canEdit ? <p className="status-warning">Entraste como staff. Puedes revisar usuarios, pero no editarlos.</p> : null}
+      {!canEdit ? <p className="status-warning">Entraste como equipo operativo. Puedes revisar usuarios, pero no editarlos.</p> : null}
 
       {canEdit ? (
         <section className="panel">
@@ -111,7 +105,7 @@ export default async function UsersPage({
               <th>Correo electrónico</th>
               <th>WhatsApp</th>
               <th>Estado</th>
-              <th>Permisos staff</th>
+              <th>Permisos del equipo</th>
               <th className="user-directory-action">Acción</th>
             </tr>
           </thead>
@@ -138,7 +132,7 @@ export default async function UsersPage({
                 <td>{user.email}</td>
                 <td>{user.phoneE164 || 'sin teléfono'}</td>
                 <td>{user.isActive ? 'Activo' : 'Inactivo'}</td>
-                <td>{user.role === 'STAFF' ? 'Staff' : 'No aplica'}</td>
+                <td>{user.role === 'STAFF' ? 'Equipo operativo' : 'No aplica'}</td>
                 <td className="user-directory-action">Solo lectura</td>
               </tr>
             ))}

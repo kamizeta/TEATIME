@@ -55,7 +55,7 @@ export default async function AdminSettings({
       ) : null}
       {googleError ? <p className="status-warning">Google devolvió un error: {googleError}</p> : null}
       {!canEdit ? (
-        <p className="status-warning">Entraste como staff. Puedes revisar, pero solo admin puede cambiar esto.</p>
+        <p className="status-warning">Entraste como equipo operativo. Puedes revisar, pero solo el administrador puede cambiar esto.</p>
       ) : null}
 
       <div className="settings-grid">
@@ -127,7 +127,7 @@ export default async function AdminSettings({
                   <option value="">Selecciona un calendario</option>
                   {googleState.calendars.map((calendar) => (
                     <option key={calendar.id} value={calendar.id}>
-                      {calendar.summary} {calendar.primary ? '(Primary)' : ''}
+                      {calendar.summary} {calendar.primary ? '(Principal)' : ''}
                     </option>
                   ))}
                 </select>
