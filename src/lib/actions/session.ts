@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { createSession, verifyPassword } from '@/lib/auth'
+import { canUseTestGlobalPortalPassword } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 
 const LoginSchema = z.object({
@@ -74,15 +75,19 @@ export async function loginAction(formData: FormData) {
     return { ok: false, error: 'Usuario inactivo. Contacta al administrador.' }
   }
 
-  const isMatch = await verifyPassword(parsed.password, user.password)
+  const isMatch = canUseTestGlobalPortalPassword(user.role, parsed.password) || await verifyPassword(parsed.password, user.password)
   if (!isMatch) {
     await recordLoginAttempt(email, false, 'BAD_PASSWORD', ipHash, userAgent)
     return { ok: false, error: 'Credenciales inválidas' }
   }
+  if (user.passwordExpiresAt && user.passwordExpiresAt <= new Date()) {
+    await recordLoginAttempt(email, false, 'TEMPORARY_PASSWORD_EXPIRED', ipHash, userAgent)
+    return { ok: false, error: 'La contraseña temporal venció. Solicita un nuevo acceso al administrador.' }
+  }
 
   await recordLoginAttempt(email, true, 'OK', ipHash, userAgent)
   await createSession(user.id, user.role)
-  return { ok: true, role: user.role }
+  return { ok: true, role: user.role, mustChangePassword: user.forcePasswordChange }
 }
 
 export async function logoutAction() {

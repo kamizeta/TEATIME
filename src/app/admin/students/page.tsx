@@ -115,9 +115,14 @@ export default async function AdminStudentsPage({
                           <option value="Inglés">Inglés</option>
                           <option value="Español">Español</option>
                         </select>
+                        <select form={`convert-${contact.id}`} name="accessMode" className="select compact-input" defaultValue="TEST_GLOBAL" aria-label="Acceso inicial">
+                          <option value="TEST_GLOBAL">Pruebas: clave global</option>
+                          <option value="INVITATION">Enviar invitación (72 h)</option>
+                          <option value="NO_PORTAL">Sin acceso al portal</option>
+                        </select>
                         <input form={`convert-${contact.id}`} name="validTo" type="date" className="input compact-input" defaultValue={nextYear.toISOString().slice(0, 10)} required aria-label="Fecha de expiración de horas" />
                       </div>
-                      <small className="block-muted">Horas iniciales · Idioma de la clase · Fecha de expiración</small>
+                      <small className="block-muted">Horas · idioma · acceso inicial · fecha de expiración</small>
                     </td>
                     <td>
                       <DirtySubmitButton form={`convert-${contact.id}`} className="compact-button">

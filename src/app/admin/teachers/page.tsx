@@ -10,7 +10,7 @@ import { TeacherDirectoryRow } from '@/components/teacher-directory-row'
 
 function getMessage(code: string) {
   const messages: Record<string, string> = {
-    MISSING_USER_FIELDS: 'Faltan nombre, email o contraseña válida.',
+    MISSING_USER_FIELDS: 'Faltan nombre o email.',
     EMAIL_ALREADY_EXISTS: 'Ya existe un usuario con ese email.',
     USER_NOT_FOUND: 'El profesor no existe.',
   }
@@ -111,8 +111,12 @@ export default async function AdminTeachersPage({
               <input id="teacherPhone" name="phoneE164" className="input" placeholder="+57..." />
             </div>
             <div className="stack-xs">
-              <label htmlFor="temporaryPassword">Contraseña temporal</label>
-              <input id="temporaryPassword" name="temporaryPassword" className="input" defaultValue="teatime123" />
+              <label htmlFor="teacherAccessMode">Acceso inicial</label>
+              <select id="teacherAccessMode" name="accessMode" className="select" defaultValue="TEST_GLOBAL">
+                <option value="TEST_GLOBAL">Pruebas: clave global</option>
+                <option value="INVITATION">Enviar invitación por correo (72 h)</option>
+                <option value="NO_PORTAL">Crear sin acceso al portal</option>
+              </select>
             </div>
             <DirtySubmitButton className="ops-span-2">
               Crear profesor

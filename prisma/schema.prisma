@@ -14,6 +14,11 @@ enum UserRole {
   STUDENT
 }
 
+enum AccessTokenPurpose {
+  INVITATION
+  RESET
+}
+
 enum AttendanceStatus {
   attended
   absent
@@ -124,6 +129,9 @@ model User {
   phoneE164 String?
   role      UserRole @default(STUDENT)
   isActive  Boolean  @default(true)
+  emailVerifiedAt      DateTime?
+  forcePasswordChange  Boolean   @default(false)
+  passwordExpiresAt    DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -143,6 +151,22 @@ model User {
   weeklyClosings        WeeklyClosing[]            @relation("WeeklyClosingReviewedBy")
   staffPermission       StaffPermission?
   messageTemplates      MessageTemplate[]          @relation("MessageTemplateUpdatedBy")
+  accessTokens          AccessToken[]
+}
+
+model AccessToken {
+  id          String             @id @default(cuid())
+  userId      String
+  tokenHash   String             @unique
+  purpose     AccessTokenPurpose
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdById String?
+  createdAt   DateTime           @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, expiresAt])
 }
 
 model Teacher {

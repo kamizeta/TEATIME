@@ -703,6 +703,20 @@ h3 {
   white-space: nowrap;
 }
 
+.access-actions {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  white-space: normal;
+}
+
+.access-action-notice {
+  display: block;
+  max-width: 260px;
+  color: var(--secondary);
+  line-height: 1.35;
+}
+
 .teachers-table-panel {
   overflow-x: auto;
 }

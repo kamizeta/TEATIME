@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation'
 const demoUsers = [
   { role: 'Administrador', email: 'admin@academy.test', password: 'admin123' },
   { role: 'Equipo operativo', email: 'staff@academy.test', password: 'staff123' },
-  { role: 'Profesor', email: 'profesor@academy.test', password: 'prof123' },
-  { role: 'Alumno', email: 'alumno@academy.test', password: 'alumno123' },
+  { role: 'Profesor', email: 'profesor@academy.test', password: 'teatime123' },
+  { role: 'Alumno', email: 'alumno@academy.test', password: 'teatime123' },
 ] as const
 
 export function LoginForm() {
@@ -29,7 +29,7 @@ export function LoginForm() {
       setIsLoading(false)
       return setError(result.error || 'No se pudo iniciar sesión')
     }
-    router.push('/')
+    router.push(result.mustChangePassword ? '/access/change-password' : '/')
     router.refresh()
   }
 
@@ -38,7 +38,7 @@ export function LoginForm() {
       <div className="card-header">
         <p className="eyebrow">Acceso</p>
         <h2>Inicia sesión</h2>
-        <p className="muted">Usa un demo rápido o entra con tu usuario real cuando conectemos la cuenta oficial.</p>
+        <p className="muted">Pruebas activas: alumnos y profesores usan la clave global `teatime123`. En producción se desactiva este modo.</p>
       </div>
       <form onSubmit={onSubmit} className="stack-md">
         <div className="stack-xs">

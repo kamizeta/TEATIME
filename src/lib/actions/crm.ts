@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { ContactSource, ContactStatus, CrmActivityStatus, CrmActivityType, NotificationStatus, UserRole } from '@prisma/client'
-import { hashPassword, requireRole } from '@/lib/auth'
+import { requireRole } from '@/lib/auth'
+import { buildNewUserAccess, issueUserAccessLink, normalizePortalAccessMode } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 import { normalizeClassLanguage } from '@/lib/class-title'
 
@@ -173,6 +174,7 @@ export async function convertCrmContactToStudentAction(formData: FormData) {
   const totalMinutes = Math.round(totalHours * 60)
   const validToRaw = String(formData.get('validTo') || '')
   const classLanguage = normalizeClassLanguage(String(formData.get('classLanguage') || 'Inglés'))
+  const accessMode = normalizePortalAccessMode(String(formData.get('accessMode') || 'TEST_GLOBAL'))
 
   if (!contactId || !teacherId || totalHours <= 0 || totalMinutes <= 0 || !validToRaw) {
     redirect(withQuery(redirectPath, { crm: 'error', code: 'MISSING_CONVERSION_FIELDS' }))
@@ -200,17 +202,20 @@ export async function convertCrmContactToStudentAction(formData: FormData) {
     redirect(withQuery(redirectPath, { crm: 'error', code: 'EMAIL_ALREADY_EXISTS' }))
   }
 
-  const password = await hashPassword('alumno123')
+  const access = await buildNewUserAccess(UserRole.STUDENT, accessMode)
   const studentCode = `STU-${String((await prisma.student.count()) + 1).padStart(3, '0')}`
 
   const student = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
         email: contact.email!,
-        password,
+        password: access.password,
         name: contact.fullName,
         phoneE164: contact.phoneE164,
         role: UserRole.STUDENT,
+        isActive: access.isActive,
+        forcePasswordChange: access.forcePasswordChange,
+        passwordExpiresAt: access.passwordExpiresAt,
       },
     })
     const createdStudent = await tx.student.create({
@@ -253,7 +258,7 @@ export async function convertCrmContactToStudentAction(formData: FormData) {
         type: CrmActivityType.NOTE,
         status: CrmActivityStatus.DONE,
         title: 'Convertido a alumno',
-        body: `Usuario creado con contraseña temporal alumno123. Código: ${studentCode}.`,
+        body: `Alumno creado. Acceso inicial: ${access.mode === 'TEST_GLOBAL' ? 'clave global de pruebas' : access.mode === 'INVITATION' ? 'invitación enviada' : 'sin acceso al portal'}. Código: ${studentCode}.`,
         completedAt: new Date(),
       },
     })
@@ -266,14 +271,18 @@ export async function convertCrmContactToStudentAction(formData: FormData) {
         after: JSON.stringify({ studentId: createdStudent.id, teacherId, totalMinutes }),
       },
     })
-    return createdStudent
+    return { id: createdStudent.id, userId: user.id }
   })
+
+  if (access.mode === 'INVITATION') {
+    await issueUserAccessLink({ userId: student.userId, createdById: session.userId })
+  }
 
   revalidatePath('/admin/crm')
   revalidatePath(`/admin/crm/${contactId}`)
   revalidatePath('/admin/students')
   revalidatePath('/admin/packages')
-  redirect(withQuery(`/admin/students?highlight=${student.id}`, { crm: 'converted' }))
+  redirect(withQuery(`/admin/students?highlight=${student.id}`, { crm: 'converted', access: access.mode.toLowerCase() }))
 }
 
 export async function updateCrmContactStatusAction(formData: FormData) {

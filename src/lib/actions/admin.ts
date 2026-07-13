@@ -10,7 +10,8 @@ import {
   UserRole,
   WeeklyClosingStatus,
 } from '@prisma/client'
-import { hashPassword, requireRole } from '@/lib/auth'
+import { requireRole } from '@/lib/auth'
+import { buildNewUserAccess, issueUserAccessLink, normalizePortalAccessMode } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 import { processNotificationQueue } from '@/lib/notifications/dispatcher'
 
@@ -209,19 +210,28 @@ export async function createUserAction(formData: FormData) {
   const name = String(formData.get('name') || '').trim()
   const phoneE164 = String(formData.get('phoneE164') || '').trim()
   const role = getEnumValue(UserRole, formData.get('role'), UserRole.STUDENT)
-  const temporaryPassword = String(formData.get('temporaryPassword') || 'teatime123').trim()
+  const accessMode = normalizePortalAccessMode(String(formData.get('accessMode') || 'INVITATION'))
 
-  if (!email || !name || temporaryPassword.length < 6) {
+  if (!email || !name) {
     redirect(withQuery(redirectPath, { user: 'error', code: 'MISSING_USER_FIELDS' }))
   }
 
   const exists = await prisma.user.findUnique({ where: { email } })
   if (exists) redirect(withQuery(redirectPath, { user: 'error', code: 'EMAIL_ALREADY_EXISTS' }))
 
-  const password = await hashPassword(temporaryPassword)
+  const access = await buildNewUserAccess(role, accessMode)
   const user = await prisma.$transaction(async (tx) => {
     const created = await tx.user.create({
-      data: { email, name, phoneE164: phoneE164 || null, role, password, isActive: true },
+      data: {
+        email,
+        name,
+        phoneE164: phoneE164 || null,
+        role,
+        password: access.password,
+        isActive: access.isActive,
+        forcePasswordChange: access.forcePasswordChange,
+        passwordExpiresAt: access.passwordExpiresAt,
+      },
     })
     if (role === UserRole.TEACHER) await tx.teacher.create({ data: { userId: created.id, timezone: 'America/Bogota' } })
     if (role === UserRole.STUDENT) {
@@ -241,10 +251,14 @@ export async function createUserAction(formData: FormData) {
     return created
   })
 
+  if (access.mode === 'INVITATION') {
+    await issueUserAccessLink({ userId: user.id, createdById: session.userId })
+  }
+
   revalidatePath('/admin/users')
   revalidatePath('/admin/students')
   revalidatePath('/admin/teachers')
-  redirect(withQuery(`${redirectPath}?highlight=${user.id}`, { user: 'created' }))
+  redirect(withQuery(`${redirectPath}?highlight=${user.id}`, { user: 'created', access: access.mode.toLowerCase() }))
 }
 
 export async function updateUserAction(formData: FormData) {

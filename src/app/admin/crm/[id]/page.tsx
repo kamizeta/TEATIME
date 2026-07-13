@@ -256,9 +256,17 @@ export default async function CrmContactDetailPage({
                   <label htmlFor="validTo">Fecha de expiración de horas</label>
                   <input id="validTo" name="validTo" type="date" className="input" defaultValue={toDateValue(nextYear)} required />
                 </div>
+                <div className="stack-xs">
+                  <label htmlFor="accessMode">Acceso inicial</label>
+                  <select id="accessMode" name="accessMode" className="select" defaultValue="TEST_GLOBAL">
+                    <option value="TEST_GLOBAL">Pruebas: clave global</option>
+                    <option value="INVITATION">Enviar invitación (72 h)</option>
+                    <option value="NO_PORTAL">Sin acceso al portal</option>
+                  </select>
+                </div>
               </div>
               <p className="hint">
-                Se crea usuario alumno con contraseña temporal `alumno123`. En producción esto debe ser invitación segura.
+                La clave global de pruebas es `teatime123`. En producción usa invitación o crea al alumno sin acceso al portal.
               </p>
               <DirtySubmitButton ready={Boolean(contact.email)}>
                 Convertir a alumno

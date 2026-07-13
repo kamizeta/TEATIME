@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { updateUserAction } from '@/lib/actions'
+import { UserAccessActions } from '@/components/user-access-actions'
 
 type TeacherDirectoryRowProps = {
   teacher: {
@@ -127,6 +128,7 @@ export function TeacherDirectoryRow({ teacher }: TeacherDirectoryRowProps) {
         >
           Guardar
         </button>
+        <UserAccessActions userId={teacher.userId} role="TEACHER" />
       </td>
     </tr>
   )

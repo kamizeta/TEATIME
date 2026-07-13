@@ -188,6 +188,30 @@ async function dispatchOne(notificationId: string) {
   return result
 }
 
+export async function sendTransactionalEmail(input: {
+  targetId: string
+  to: string
+  subject: string
+  message: string
+  createdBy: string
+}) {
+  const notification = await prisma.notificationAttempt.create({
+    data: {
+      targetType: 'USER',
+      targetId: input.targetId,
+      channel: 'EMAIL',
+      status: NotificationStatus.PENDING,
+      payload: JSON.stringify({
+        to: input.to,
+        subject: input.subject,
+        message: input.message,
+        createdBy: input.createdBy,
+      }),
+    },
+  })
+  return dispatchOne(notification.id)
+}
+
 export async function processNotificationQueue(limit = 20) {
   const notifications = await prisma.notificationAttempt.findMany({
     where: { status: { in: [NotificationStatus.PENDING, NotificationStatus.RETRY] } },

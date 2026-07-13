@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { updateStaffPermissionAction, updateUserAction } from '@/lib/actions'
+import { UserAccessActions } from '@/components/user-access-actions'
 
 type StaffPermission = {
   canManageUsers?: boolean
@@ -149,6 +150,7 @@ export function UserDirectoryRow({ user, roleLabel }: UserDirectoryRowProps) {
         >
           Guardar
         </button>
+        <UserAccessActions userId={user.id} role={user.role} />
       </td>
     </tr>
   )

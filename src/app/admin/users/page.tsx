@@ -10,7 +10,7 @@ import { roleLabels } from '@/lib/display-labels'
 
 function getMessage(code: string) {
   const messages: Record<string, string> = {
-    MISSING_USER_FIELDS: 'Faltan nombre, email o contraseña válida.',
+    MISSING_USER_FIELDS: 'Faltan nombre o email.',
     EMAIL_ALREADY_EXISTS: 'Ya existe un usuario con ese email.',
     USER_NOT_FOUND: 'El usuario no existe.',
     MISSING_USER_ID: 'Falta el usuario.',
@@ -83,9 +83,13 @@ export default async function UsersPage({
               </select>
             </div>
             <div className="stack-xs ops-span-2">
-              <label htmlFor="temporaryPassword">Contraseña temporal</label>
-              <input id="temporaryPassword" name="temporaryPassword" className="input" defaultValue="teatime123" />
-              <p className="hint">MVP local: contraseña temporal. Producción necesita invitación/reset seguro.</p>
+              <label htmlFor="accessMode">Acceso inicial</label>
+              <select id="accessMode" name="accessMode" className="select" defaultValue="INVITATION">
+                <option value="INVITATION">Enviar invitación por correo (72 h)</option>
+                <option value="NO_PORTAL">Crear sin acceso al portal</option>
+                <option value="TEST_GLOBAL">Acceso de pruebas: clave global</option>
+              </select>
+              <p className="hint">La clave global de pruebas solo aplica a alumnos y profesores: `teatime123`.</p>
             </div>
             <button type="submit" className="button-primary ops-span-2">Crear usuario</button>
           </form>
