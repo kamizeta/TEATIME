@@ -10,7 +10,8 @@ function csvCell(value: string | number) {
 }
 
 export async function GET() {
-  await requireAdminOrStaffPermission('canCloseWeeks')
+  try {
+    await requireAdminOrStaffPermission('canCloseWeeks')
   const adjustments = await prisma.auditLog.findMany({
     where: { entityType: 'PACKAGE_LEDGER' },
     include: { actor: true },
@@ -94,10 +95,14 @@ export async function GET() {
     )
   }
 
-  return new NextResponse(lines.join('\n'), {
-    headers: {
-      'Content-Type': 'text/csv',
-      'Content-Disposition': 'attachment; filename="reporte_ledger_paquetes.csv"',
-    },
-  })
+    return new NextResponse(lines.join('\n'), {
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="reporte_ledger_paquetes.csv"',
+      },
+    })
+  } catch (error: any) {
+    const status = error.message === 'UNAUTHORIZED' ? 401 : error.message === 'FORBIDDEN_STAFF_PERMISSION' ? 403 : 500
+    return NextResponse.json({ ok: false, error: status === 500 ? 'No se pudo generar el reporte.' : error.message }, { status })
+  }
 }
