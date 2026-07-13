@@ -21,7 +21,7 @@ export const attendanceStatusLabels: Record<string, string> = {
   pending: 'Pendiente',
   attended: 'Asistió',
   late: 'Llegó tarde',
-  absent: 'Ausente',
+  absent: 'No asistió',
   no_show: 'No asistió',
 }
 

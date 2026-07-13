@@ -15,9 +15,9 @@ const classStatusLabels: Record<string, string> = {
 
 const attendanceLabels: Record<string, string> = {
   attended: 'Asistió',
-  absent: 'Ausente',
+  absent: 'No asistió',
   late: 'Llegó tarde',
-  no_show: 'No se presentó',
+  no_show: 'No asistió',
 }
 
 export default async function StudentOverview({
