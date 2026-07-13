@@ -134,7 +134,15 @@ export function getPackageProgress(totalMinutes: number, usedMinutes: number, re
 
 export function formatPackageProgress(totalMinutes: number, usedMinutes: number, reservedMinutes: number) {
   const progress = getPackageProgress(totalMinutes, usedMinutes, reservedMinutes)
-  return `${formatMinutesLabel(progress.consumedMinutes)} / ${formatMinutesLabel(progress.scheduledMinutes)} / ${formatMinutesLabel(progress.contractedMinutes)}`
+  const formatHours = (minutes: number) => {
+    const hours = minutes / 60
+    const value = Number.isInteger(hours)
+      ? String(hours)
+      : hours.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+    return `${value} h`
+  }
+
+  return `${formatHours(progress.consumedMinutes)} / ${formatHours(progress.scheduledMinutes)} / ${formatHours(progress.contractedMinutes)}`
 }
 
 export async function getPrimaryBookingContextForUser(userId: string): Promise<PrimaryBookingContext | null> {

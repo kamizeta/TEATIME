@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic"
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
-import { formatMinutesLabel, formatPackageProgress, getPackageProgress, getPrimaryBookingContextForUser } from '@/lib/booking'
+import { formatPackageProgress, getPackageProgress, getPrimaryBookingContextForUser } from '@/lib/booking'
 import { submitCancellationAction } from '@/lib/actions'
 
 const classStatusLabels: Record<string, string> = {
@@ -55,7 +55,7 @@ export default async function StudentOverview({
         <div className="student-plan-copy">
           <p className="eyebrow">Alumno</p>
           <h1 className="page-title">Tu plan de clases</h1>
-          <p className="page-lead">Consulta tus clases tomadas, programadas y las horas que aún puedes reservar.</p>
+          <p className="page-lead">Consulta el estado actual de tus clases y tu paquete.</p>
           <div className="toolbar">
             <Link href="/student/book" className="button-primary">Reservar clase</Link>
           </div>
@@ -66,18 +66,13 @@ export default async function StudentOverview({
               <span>Profesor asignado</span>
               <strong>{bookingContext.teacher.userName}</strong>
             </div>
-            <div className="student-summary-card">
-              <span>Saldo disponible</span>
-              <strong>{formatMinutesLabel(packageProgress.availableMinutes)}</strong>
-            </div>
             <div className="student-summary-card student-summary-trace">
-              <span>Seguimiento del paquete</span>
+              <span>Estado actual</span>
               <strong>{formatPackageProgress(
                 bookingContext.package.totalMinutes,
                 bookingContext.package.usedMinutes,
                 bookingContext.package.reservedMinutes,
               )}</strong>
-              <small>Tomadas / programadas / contratadas</small>
             </div>
           </aside>
         ) : null}
@@ -104,7 +99,7 @@ export default async function StudentOverview({
               <th>Inicio</th>
               <th>Estado clase</th>
               <th>Asistencia</th>
-              <th>Seguimiento del paquete</th>
+              <th>Estado actual</th>
               <th>Acción</th>
             </tr>
           </thead>
@@ -119,7 +114,6 @@ export default async function StudentOverview({
                   <td>{row.attendance?.status ? attendanceLabels[row.attendance.status] || row.attendance.status : 'Pendiente'}</td>
                   <td>
                     <strong>{trace}</strong>
-                    <small className="block-muted">Tomadas / programadas / contratadas</small>
                   </td>
                   <td>
                     {row.status !== 'CONFIRMED' || row.classEvent.status === 'CANCELED' || row.classEvent.status === 'COMPLETED' ? (

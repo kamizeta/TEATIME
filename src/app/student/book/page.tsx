@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/auth'
 import { bookSlotAction } from '@/lib/actions/booking'
-import { formatMinutesLabel, formatPackageProgress, getPackageProgress, listBookableSlotsForStudent } from '@/lib/booking'
+import { formatPackageProgress, getPackageProgress, listBookableSlotsForStudent } from '@/lib/booking'
 
 export default async function StudentBookingPage() {
   const session = await getSession()
@@ -47,10 +47,7 @@ export default async function StudentBookingPage() {
         <div className="stack-md">
           <div className="metric-row">
             <span className="status-pill">Profesor asignado: {context.teacher.userName}</span>
-            <span className="status-pill">Saldo disponible: {formatMinutesLabel(packageProgress.availableMinutes)}</span>
-            <span className="status-pill">
-              {formatPackageProgress(context.package.totalMinutes, context.package.usedMinutes, context.package.reservedMinutes)} · tomadas / programadas / contratadas
-            </span>
+            <span className="status-pill">Estado actual: {formatPackageProgress(context.package.totalMinutes, context.package.usedMinutes, context.package.reservedMinutes)}</span>
           </div>
           {slots.length ? (
             Object.entries(groupedSlots).map(([day, daySlots]) => (
