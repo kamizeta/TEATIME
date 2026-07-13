@@ -12,6 +12,13 @@ export const metadata: Metadata = {
   description: 'Operación académica, asistencia y reservas',
 }
 
+const roleLabels: Record<string, string> = {
+  ADMIN: 'Admin',
+  STAFF: 'Staff',
+  TEACHER: 'Profesor',
+  STUDENT: 'Alumno',
+}
+
 async function submitLogout() {
   'use server'
   await logoutAction()
@@ -36,7 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
             {session ? (
               <div className="topbar-actions">
-                <span className="role-pill">{session.role}</span>
+                <span className="role-pill">{roleLabels[session.role] || session.role}</span>
                 <form action={submitLogout}>
                   <button type="submit" className="button-ghost">
                     Cerrar sesión

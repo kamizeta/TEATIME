@@ -10,6 +10,13 @@ type NavItem = {
   description: string
 }
 
+const roleLabels: Record<AppRole, string> = {
+  ADMIN: 'Admin',
+  STAFF: 'Staff',
+  TEACHER: 'Profesor',
+  STUDENT: 'Alumno',
+}
+
 export function AppSidebar({ nav, role }: { nav: NavItem[]; role: AppRole }) {
   const pathname = usePathname()
 
@@ -17,7 +24,7 @@ export function AppSidebar({ nav, role }: { nav: NavItem[]; role: AppRole }) {
     <aside className="sidebar">
       <div className="sidebar-heading">
         <span>Menu principal</span>
-        <strong>{role}</strong>
+        <strong>{roleLabels[role]}</strong>
       </div>
       <nav className="sidebar-nav" aria-label="Navegacion principal">
         {nav.map((item) => {

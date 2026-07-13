@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic"
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
-import { submitCancellationAction } from '@/lib/actions'
+import { TeacherSchedule } from '@/components/teacher-schedule'
 
 export default async function TeacherDashboard({
   searchParams,
@@ -11,10 +11,10 @@ export default async function TeacherDashboard({
   searchParams?: Record<string, string | string[] | undefined>
 }) {
   const session = await getSession()
-  if (!session || session.role !== 'TEACHER') return <p>Sin sesión docente</p>
+  if (!session || session.role !== 'TEACHER') return <p>Sin sesión de profesor</p>
 
   const teacher = await prisma.teacher.findUnique({ where: { userId: session.userId } })
-  if (!teacher) return <p>Docente no registrado</p>
+  if (!teacher) return <p>Profesor no registrado</p>
 
   const rows = await prisma.classEvent.findMany({
     where: { teacherId: teacher.id },
@@ -27,12 +27,11 @@ export default async function TeacherDashboard({
   return (
     <div className="page-stack">
       <section className="hero">
-        <p className="eyebrow">Teacher</p>
+        <p className="eyebrow">Profesor</p>
         <h1 className="page-title">Tu agenda operativa</h1>
         <p className="page-lead">Desde aquí vas a cerrar clases rápido y luego publicar disponibilidad para reservas.</p>
         <div className="toolbar">
-          <Link href="/teacher/today" className="button-primary">Ver hoy</Link>
-          <Link href="/teacher/availability" className="button-ghost">Mi disponibilidad</Link>
+          <Link href="/teacher/availability" className="button-primary">Mi disponibilidad</Link>
         </div>
       </section>
 
@@ -45,54 +44,18 @@ export default async function TeacherDashboard({
         </p>
       ) : null}
 
-      <section className="panel table-panel">
-        <div className="card-header">
-          <p className="eyebrow">Agenda</p>
-          <h2>Clases asignadas</h2>
-        </div>
-        {rows.length ? (
-          <table>
-            <thead>
-              <tr>
-                <th>Hora</th>
-                <th>Clase</th>
-                <th>Alumnos</th>
-                <th>Estado</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((c) => (
-                <tr key={c.id}>
-                  <td>{new Date(c.startAt).toLocaleString('es-CO')}</td>
-                  <td>{c.title}</td>
-                  <td>{c.enrollments.map((enrollment) => enrollment.student.user.name).join(', ')}</td>
-                  <td><span className="status-pill">{c.status}</span></td>
-                  <td>
-                    {c.status === 'CANCELED' || c.status === 'COMPLETED' ? (
-                      <span className="muted">Sin acción</span>
-                    ) : (
-                      <form action={submitCancellationAction}>
-                        <input type="hidden" name="classId" value={c.id} />
-                        <input type="hidden" name="scope" value="CLASS" />
-                        <input type="hidden" name="redirectPath" value="/teacher/today" />
-                        <input
-                          type="hidden"
-                          name="reason"
-                          value="Clase cancelada por el profesor desde su agenda operativa."
-                        />
-                        <button type="submit" className="button-ghost">Cancelar clase</button>
-                      </form>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="empty-state">Todavía no tienes clases cargadas en esta cuenta demo.</div>
-        )}
-      </section>
+      <TeacherSchedule
+        classes={rows.map((classEvent) => ({
+          id: classEvent.id,
+          title: classEvent.title,
+          startAt: classEvent.startAt.toISOString(),
+          endAt: classEvent.endAt.toISOString(),
+          durationMinutes: classEvent.durationMinutes,
+          meetUrl: classEvent.meetUrl,
+          status: classEvent.status,
+          students: classEvent.enrollments.map((enrollment) => enrollment.student.user.name),
+        }))}
+      />
     </div>
   )
 }

@@ -24,7 +24,7 @@ export default async function TeacherAvailabilityPage() {
   return (
     <div className="page-stack">
       <section className="hero">
-        <p className="eyebrow">Scheduling</p>
+        <p className="eyebrow">Disponibilidad</p>
         <h1 className="page-title">Mi disponibilidad</h1>
         <p className="page-lead">
           Publica aquí los bloques desde los que el alumno podrá reservar. Este es ya el primer editor funcional del
