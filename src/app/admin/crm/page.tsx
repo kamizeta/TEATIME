@@ -134,7 +134,10 @@ export default async function AdminCrmPage({
               </div>
               <div className="stack-xs">
                 <label htmlFor="preferredLanguage">Idioma</label>
-                <input id="preferredLanguage" name="preferredLanguage" className="input" defaultValue="es" />
+                <select id="preferredLanguage" name="preferredLanguage" className="select" defaultValue="es">
+                  <option value="es">Español</option>
+                  <option value="en">Inglés</option>
+                </select>
               </div>
             </div>
             <div className="form-grid three">
