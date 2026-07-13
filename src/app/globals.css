@@ -888,6 +888,71 @@ h3 {
   padding: 24px;
 }
 
+.class-detail-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.class-detail-primary,
+.class-detail-aside {
+  display: grid;
+  gap: 18px;
+}
+
+.class-detail-aside {
+  position: sticky;
+  top: 24px;
+}
+
+.class-operational-data {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.class-operational-data > div {
+  display: grid;
+  gap: 4px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.class-operational-data span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.class-action-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.class-action-stack form,
+.class-action-stack button,
+.class-action-stack .button-link {
+  width: 100%;
+}
+
+.terminal-class-note {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #f7c5b9;
+  border-radius: 14px;
+  background: #fff6f2;
+}
+
+.terminal-class-note p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .meet-link-row {
   display: flex;
   align-items: center;
@@ -1290,6 +1355,14 @@ h3 {
   .meet-link-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .class-detail-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .class-detail-aside {
+    position: static;
   }
 
   .teacher-availability-item {

@@ -34,7 +34,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       )
     }
 
-    return NextResponse.json({ ok: true, allowed: true, overrideUsed: result.overrideUsed })
+    return NextResponse.json({ ok: true, allowed: true, alreadyCanceled: result.alreadyCanceled, overrideUsed: result.overrideUsed })
   } catch (e: any) {
     const status = e.message === 'CLASS_NOT_FOUND' ? 404 : e.message === 'UNAUTHORIZED' ? 401 : 500
     return NextResponse.json({ ok: false, error: e.message }, { status })

@@ -48,7 +48,7 @@ export async function submitCancellationAction(formData: FormData) {
 
   redirect(
     withQuery(redirectPath, {
-      cancel: 'ok',
+      cancel: result.alreadyCanceled ? 'already' : 'ok',
       scope,
       override: result.overrideUsed ? '1' : '0',
     })

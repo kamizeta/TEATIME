@@ -44,7 +44,16 @@ export async function requestCancellation(input: {
 
   if (!classEvent) throw new Error('CLASS_NOT_FOUND')
   if (classEvent.status === 'COMPLETED') throw new Error('CLASS_ALREADY_COMPLETED')
-  if (classEvent.status === 'CANCELED') throw new Error('CLASS_ALREADY_CANCELED')
+  if (classEvent.status === 'CANCELED') {
+    return {
+      ok: true as const,
+      alreadyCanceled: true,
+      scope,
+      minimumNoticeHours: policy.minimumNoticeHours,
+      diffHours: diffHoursUntil(classEvent.startAt),
+      overrideUsed: false,
+    }
+  }
 
   const requesterEnrollment = classEvent.enrollments.find((enrollment) => enrollment.student.userId === userId)
   const isTeacherOwner = classEvent.teacher.userId === userId
@@ -148,6 +157,7 @@ export async function requestCancellation(input: {
 
   return {
     ok: true as const,
+    alreadyCanceled: false,
     scope,
     minimumNoticeHours: policy.minimumNoticeHours,
     diffHours,
