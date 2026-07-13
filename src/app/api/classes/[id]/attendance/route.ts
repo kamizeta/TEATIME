@@ -15,15 +15,23 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const session = await requireRole(['ADMIN', 'TEACHER'])
     const { studentId, status } = Body.parse(await req.json())
 
+    const classEvent = await prisma.classEvent.findUnique({
+      where: { id: params.id },
+      include: { teacher: true },
+    })
+    if (!classEvent) return NextResponse.json({ ok: false, error: 'Clase no encontrada' }, { status: 404 })
+    if (session.role === 'TEACHER' && classEvent.teacher.userId !== session.userId) {
+      return NextResponse.json({ ok: false, error: 'No puedes registrar asistencia de otra profesora o profesor.' }, { status: 403 })
+    }
+    if (classEvent.status === 'CANCELED' || classEvent.status === 'COMPLETED') {
+      return NextResponse.json({ ok: false, error: 'La asistencia de esta clase ya no se puede modificar.' }, { status: 409 })
+    }
+
     const enrollment = await prisma.classEnrollment.findUnique({
       where: { classEventId_studentId: { classEventId: params.id, studentId } },
       include: { package: true }
     })
     if (!enrollment) return NextResponse.json({ ok: false, error: 'Matrícula inválida' }, { status: 404 })
-
-    const previous = await prisma.attendanceRecord.findUnique({
-      where: { classEventId_studentId: { classEventId: params.id, studentId } },
-    })
 
     await prisma.attendanceRecord.upsert({
       where: { classEventId_studentId: { classEventId: params.id, studentId } },
@@ -33,6 +41,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     return NextResponse.json({ ok: true })
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e.message }, { status: 500 })
+    return NextResponse.json({ ok: false, error: e.message }, { status: e.message === 'UNAUTHORIZED' ? 401 : 500 })
   }
 }

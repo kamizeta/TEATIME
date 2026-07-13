@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdminOrStaffPermission } from '@/lib/staff-permissions'
 
 function csvCell(value: string | number) {
   const normalized = String(value ?? '')
@@ -9,6 +10,7 @@ function csvCell(value: string | number) {
 }
 
 export async function GET() {
+  await requireAdminOrStaffPermission('canCloseWeeks')
   const rows = await prisma.classEnrollment.findMany({
     include: {
       student: { include: { user: true } },

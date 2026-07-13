@@ -2,6 +2,7 @@ import { ClassType, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { buildClassTitle, normalizeClassLanguage, syncClassTitle } from '@/lib/class-title'
 import { syncClassEventToGoogleCalendar } from '@/lib/google-calendar'
+import { isSignedValueValid, signValue } from '@/lib/security'
 
 type PrimaryBookingContext = {
   student: {
@@ -51,6 +52,7 @@ type SlotTokenPayload = {
   classType: ClassType
   capacity: number
   existingClassId?: string
+  expiresAtIso: string
 }
 
 function parseCsv(value: string) {
@@ -67,11 +69,16 @@ function parseCsvNumbers(value: string) {
 }
 
 function encodeSlotToken(payload: SlotTokenPayload) {
-  return Buffer.from(JSON.stringify(payload)).toString('base64url')
+  const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url')
+  return `${encoded}.${signValue(encoded)}`
 }
 
 function decodeSlotToken(token: string): SlotTokenPayload {
-  return JSON.parse(Buffer.from(token, 'base64url').toString('utf8')) as SlotTokenPayload
+  const [encoded, signature] = token.split('.')
+  if (!encoded || !signature || !isSignedValueValid(encoded, signature)) throw new Error('INVALID_SLOT_TOKEN')
+  const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8')) as SlotTokenPayload
+  if (!payload.expiresAtIso || new Date(payload.expiresAtIso).getTime() <= Date.now()) throw new Error('SLOT_TOKEN_EXPIRED')
+  return payload
 }
 
 function parseTimeToMinutes(time: string) {
@@ -105,6 +112,67 @@ function setTime(date: Date, minutesFromMidnight: number) {
   const copy = startOfDay(date)
   copy.setMinutes(minutesFromMidnight)
   return copy
+}
+
+function getTeacherLocalTime(date: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  const weekday = ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 } as Record<string, number>)[values.weekday]
+  return { weekday, minutes: Number(values.hour) * 60 + Number(values.minute) }
+}
+
+async function assertSlotMatchesActiveAvailability(
+  client: typeof prisma | Prisma.TransactionClient,
+  context: PrimaryBookingContext,
+  slot: SlotTokenPayload,
+  startAt: Date,
+  endAt: Date
+) {
+  const duration = endAt.getTime() - startAt.getTime()
+  if (!Number.isFinite(startAt.getTime()) || !Number.isFinite(endAt.getTime()) || duration !== slot.durationMinutes * 60_000) {
+    throw new Error('INVALID_SLOT_RANGE')
+  }
+
+  const local = getTeacherLocalTime(startAt, context.teacher.timezone)
+  const matchingBlocks = await client.teacherAvailabilityBlock.findMany({
+    where: {
+      teacherId: context.teacher.id,
+      weekday: local.weekday,
+      isActive: true,
+      durationMinutes: slot.durationMinutes,
+      classType: slot.classType,
+      capacity: slot.capacity,
+    },
+  })
+  const slotEndMinutes = local.minutes + slot.durationMinutes
+  const validBlock = matchingBlocks.find((block) => {
+    const startMinutes = parseTimeToMinutes(block.startLocalTime)
+    const endMinutes = parseTimeToMinutes(block.endLocalTime)
+    return local.minutes >= startMinutes && slotEndMinutes <= endMinutes && (local.minutes - startMinutes) % slot.durationMinutes === 0
+  })
+  if (!validBlock) throw new Error('SLOT_NO_LONGER_AVAILABLE')
+
+  const now = new Date()
+  const hoursUntilStart = (startAt.getTime() - now.getTime()) / 3_600_000
+  if (hoursUntilStart < context.bookingRule.minimumNoticeHours || hoursUntilStart > context.bookingRule.maximumNoticeDays * 24) {
+    throw new Error('SLOT_OUTSIDE_BOOKING_WINDOW')
+  }
+
+  const unavailable = await client.teacherAvailabilityException.findFirst({
+    where: {
+      teacherId: context.teacher.id,
+      type: 'UNAVAILABLE',
+      startsAt: { lt: endAt },
+      endsAt: { gt: startAt },
+    },
+  })
+  if (unavailable) throw new Error('SLOT_UNAVAILABLE_EXCEPTION')
 }
 
 function overlapsWithBuffer(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date, bufferMinutes: number) {
@@ -322,6 +390,7 @@ export async function listBookableSlotsForStudent(userId: string, daysAhead = 14
             classType: block.classType,
             capacity: block.capacity,
             existingClassId,
+            expiresAtIso: new Date(Date.now() + 10 * 60_000).toISOString(),
           }),
           startsAtIso: startAt.toISOString(),
           endsAtIso: endAt.toISOString(),
@@ -360,31 +429,20 @@ export async function createBookingForStudent(userId: string, slotToken: string)
 
   const startAt = new Date(slot.startAtIso)
   const endAt = new Date(slot.endAtIso)
-
-  const rule = await prisma.bookingRule.findFirst()
-  const bufferMinutes = rule?.bufferMinutes ?? context.bookingRule.bufferMinutes
-
-  const conflictingClass = await prisma.classEvent.findFirst({
-    where: {
-      teacherId: context.teacher.id,
-      id: slot.existingClassId ? { not: slot.existingClassId } : undefined,
-      status: { in: ['SCHEDULED', 'RESERVED'] },
-      startAt: { lt: new Date(endAt.getTime() + bufferMinutes * 60_000) },
-      endAt: { gt: new Date(startAt.getTime() - bufferMinutes * 60_000) },
-    },
-  })
-
-  if (conflictingClass) {
-    throw new Error('SLOT_ALREADY_TAKEN')
-  }
+  await assertSlotMatchesActiveAvailability(prisma, context, slot, startAt, endAt)
 
   const bookedClass = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${`${context.teacher.id}:${startAt.toISOString()}`}))`
+    await assertSlotMatchesActiveAvailability(tx, context, slot, startAt, endAt)
+
     const pack = await tx.hourPackage.findUnique({ where: { id: context.package.id } })
     if (!pack) throw new Error('PACKAGE_NOT_FOUND')
 
     const currentRemaining = pack.totalMinutes - pack.usedMinutes - pack.reservedMinutes
     if (currentRemaining < slot.durationMinutes) throw new Error('INSUFFICIENT_PACKAGE_BALANCE')
 
+    const rule = await tx.bookingRule.findFirst({ orderBy: { createdAt: 'asc' } })
+    const bufferMinutes = rule?.bufferMinutes ?? context.bookingRule.bufferMinutes
     let classEvent = slot.existingClassId
       ? await tx.classEvent.findUnique({
           where: { id: slot.existingClassId },
@@ -392,12 +450,32 @@ export async function createBookingForStudent(userId: string, slotToken: string)
         })
       : null
 
-    if (classEvent && classEvent.classType === 'GROUP' && classEvent.enrollments.length >= classEvent.capacity) {
+    if (classEvent && (
+      classEvent.teacherId !== context.teacher.id ||
+      classEvent.status === 'CANCELED' ||
+      classEvent.classType !== 'GROUP' ||
+      classEvent.startAt.getTime() !== startAt.getTime() ||
+      classEvent.endAt.getTime() !== endAt.getTime() ||
+      classEvent.durationMinutes !== slot.durationMinutes ||
+      classEvent.capacity !== slot.capacity
+    )) throw new Error('INVALID_EXISTING_GROUP_CLASS')
+    if (classEvent && classEvent.enrollments.filter((item) => item.status === 'CONFIRMED').length >= classEvent.capacity) {
       throw new Error('GROUP_CLASS_FULL')
     }
     if (classEvent && normalizeClassLanguage(classEvent.classLanguage) !== normalizeClassLanguage(pack.classLanguage)) {
       throw new Error('PACKAGE_LANGUAGE_MISMATCH')
     }
+
+    const conflict = await tx.classEvent.findFirst({
+      where: {
+        teacherId: context.teacher.id,
+        id: classEvent ? { not: classEvent.id } : undefined,
+        status: { in: ['SCHEDULED', 'RESERVED'] },
+        startAt: { lt: new Date(endAt.getTime() + bufferMinutes * 60_000) },
+        endAt: { gt: new Date(startAt.getTime() - bufferMinutes * 60_000) },
+      },
+    })
+    if (conflict) throw new Error('SLOT_ALREADY_TAKEN')
 
     if (!classEvent) {
       classEvent = await tx.classEvent.create({
@@ -450,13 +528,14 @@ export async function createBookingForStudent(userId: string, slotToken: string)
       where: { id: context.package.id },
       data: {
         reservedMinutes: { increment: slot.durationMinutes },
+        reservedHours: { increment: Math.ceil(slot.durationMinutes / 60) },
       },
     })
 
     await syncClassTitle(tx, classEvent.id)
 
     return classEvent
-  })
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
 
   await syncClassEventToGoogleCalendar(bookedClass.id, 'upsert')
   return bookedClass
@@ -475,6 +554,15 @@ export async function createAvailabilityBlockForTeacher(userId: string, input: {
 
   if (parseTimeToMinutes(input.endLocalTime) <= parseTimeToMinutes(input.startLocalTime)) {
     throw new Error('INVALID_AVAILABILITY_RANGE')
+  }
+
+  const activeBlocks = await prisma.teacherAvailabilityBlock.findMany({
+    where: { teacherId: teacher.id, weekday: input.weekday, isActive: true },
+  })
+  const startsAt = parseTimeToMinutes(input.startLocalTime)
+  const endsAt = parseTimeToMinutes(input.endLocalTime)
+  if (activeBlocks.some((block) => startsAt < parseTimeToMinutes(block.endLocalTime) && endsAt > parseTimeToMinutes(block.startLocalTime))) {
+    throw new Error('AVAILABILITY_OVERLAPS_EXISTING')
   }
 
   return prisma.teacherAvailabilityBlock.create({

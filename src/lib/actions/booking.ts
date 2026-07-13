@@ -90,7 +90,7 @@ export async function bookSlotAction(formData: FormData) {
 }
 
 export async function closeClassAction(formData: FormData) {
-  await requireRole(['ADMIN', 'STAFF', 'TEACHER'])
+  const session = await requireRole(['ADMIN', 'STAFF', 'TEACHER'])
   const classId = String(formData.get('classId') || '')
   if (!classId) throw new Error('MISSING_CLASS_ID')
 
@@ -107,6 +107,10 @@ export async function closeClassAction(formData: FormData) {
   })
 
   if (!classEvent) throw new Error('CLASS_NOT_FOUND')
+  if (session.role === 'TEACHER') {
+    const teacher = await prisma.teacher.findUnique({ where: { id: classEvent.teacherId } })
+    if (!teacher || teacher.userId !== session.userId) throw new Error('TEACHER_NOT_OWNER')
+  }
   if (classEvent.status === 'COMPLETED') throw new Error('CLASS_ALREADY_CLOSED')
   if (classEvent.status === 'CANCELED') {
     redirect(`/admin/classes/${classId}?ops=error&code=CLASS_CANCELED`)

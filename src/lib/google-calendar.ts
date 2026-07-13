@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { getSettingsMap, settingKeys, upsertSettings } from '@/lib/settings'
+import { decryptSecret, encryptSecret } from '@/lib/secret-crypto'
+import { randomBytes, timingSafeEqual } from 'crypto'
 
 type GoogleCalendarListItem = {
   id: string
@@ -38,7 +40,20 @@ export function getGoogleCalendarRedirectUri() {
   return `${baseUrl.replace(/\/$/, '')}/api/integrations/google/callback`
 }
 
-export function buildGoogleCalendarConnectUrl() {
+export const GOOGLE_OAUTH_STATE_COOKIE = 'teatime_google_oauth_state'
+
+export function createGoogleOAuthState() {
+  return randomBytes(32).toString('base64url')
+}
+
+export function isGoogleOAuthStateValid(expected: string | undefined, received: string | null) {
+  if (!expected || !received) return false
+  const expectedBuffer = Buffer.from(expected)
+  const receivedBuffer = Buffer.from(received)
+  return expectedBuffer.length === receivedBuffer.length && timingSafeEqual(expectedBuffer, receivedBuffer)
+}
+
+export function buildGoogleCalendarConnectUrl(state: string) {
   const { clientId } = requireGoogleEnv()
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
   url.searchParams.set('client_id', clientId)
@@ -48,6 +63,7 @@ export function buildGoogleCalendarConnectUrl() {
   url.searchParams.set('prompt', 'consent')
   url.searchParams.set('include_granted_scopes', 'true')
   url.searchParams.set('scope', `openid email profile ${GOOGLE_CALENDAR_SCOPE}`)
+  url.searchParams.set('state', state)
   return url.toString()
 }
 
@@ -180,9 +196,12 @@ export async function completeGoogleCalendarConnection(code: string) {
     throw new Error('Google no devolvió refresh token. Vuelve a conectar con consentimiento completo.')
   }
 
+  const existing = await getSettingsMap([settingKeys.googleCalendarRefreshToken])
   await upsertSettings({
     [settingKeys.googleCalendarAccountEmail]: profile.email || '',
-    [settingKeys.googleCalendarRefreshToken]: tokens.refresh_token,
+    [settingKeys.googleCalendarRefreshToken]: tokens.refresh_token
+      ? encryptSecret(tokens.refresh_token)
+      : existing[settingKeys.googleCalendarRefreshToken] || '',
     [settingKeys.googleCalendarCalendarsJson]: JSON.stringify(calendars),
     [settingKeys.googleCalendarId]: current.calendarId || selectedCalendar?.id || '',
     [settingKeys.googleCalendarName]: current.calendarId ? current.calendarName : selectedCalendar?.summary || '',
@@ -249,7 +268,7 @@ async function getGoogleCalendarAccessContext() {
 
   return {
     settings,
-    accessToken: await refreshGoogleAccessToken(refreshToken),
+    accessToken: await refreshGoogleAccessToken(decryptSecret(refreshToken)),
   }
 }
 
@@ -423,7 +442,7 @@ export async function syncGoogleCalendarIntoClasses() {
   if (!settings.calendarId) throw new Error('No hay calendar ID configurado.')
 
   const values = await getSettingsMap([settingKeys.googleCalendarRefreshToken])
-  const accessToken = await refreshGoogleAccessToken(values[settingKeys.googleCalendarRefreshToken] || '')
+  const accessToken = await refreshGoogleAccessToken(decryptSecret(values[settingKeys.googleCalendarRefreshToken] || ''))
   const calendars = await fetchGoogleCalendars(accessToken)
   const currentCalendar = calendars.find((calendar) => calendar.id === settings.calendarId)
 

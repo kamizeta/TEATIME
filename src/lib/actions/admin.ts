@@ -14,6 +14,7 @@ import { requireRole } from '@/lib/auth'
 import { buildNewUserAccess, issueUserAccessLink, normalizePortalAccessMode } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 import { processNotificationQueue } from '@/lib/notifications/dispatcher'
+import { requireAdminOrStaffPermission } from '@/lib/staff-permissions'
 
 function withQuery(path: string, entries: Record<string, string>) {
   const [pathname, query = ''] = path.split('?')
@@ -42,7 +43,7 @@ function toWeekBounds(raw: string) {
 }
 
 export async function createIncidentAction(formData: FormData) {
-  const session = await requireRole(['ADMIN', 'STAFF'])
+  const session = await requireAdminOrStaffPermission('canResolveIncidents')
   const redirectPath = String(formData.get('redirectPath') || '/admin/incidents')
   const title = String(formData.get('title') || '').trim()
   const description = String(formData.get('description') || '').trim()
@@ -81,7 +82,7 @@ export async function createIncidentAction(formData: FormData) {
 }
 
 export async function updateIncidentAction(formData: FormData) {
-  const session = await requireRole(['ADMIN', 'STAFF'])
+  const session = await requireAdminOrStaffPermission('canResolveIncidents')
   const redirectPath = String(formData.get('redirectPath') || '/admin/incidents')
   const incidentId = String(formData.get('incidentId') || '')
   const status = getEnumValue(IncidentStatus, formData.get('status'), IncidentStatus.IN_REVIEW)
@@ -124,7 +125,7 @@ export async function updateIncidentAction(formData: FormData) {
 }
 
 export async function markWeeklyClosingReviewedAction(formData: FormData) {
-  const session = await requireRole(['ADMIN', 'STAFF'])
+  const session = await requireAdminOrStaffPermission('canCloseWeeks')
   const redirectPath = String(formData.get('redirectPath') || '/admin/weekly-closing')
   const week = String(formData.get('week') || '')
   const summary = String(formData.get('summary') || '').trim()
@@ -167,7 +168,7 @@ export async function markWeeklyClosingReviewedAction(formData: FormData) {
 }
 
 export async function saveMessageTemplateAction(formData: FormData) {
-  const session = await requireRole(['ADMIN', 'STAFF'])
+  const session = await requireAdminOrStaffPermission('canManageRules')
   const redirectPath = String(formData.get('redirectPath') || '/admin/templates')
   const templateId = String(formData.get('templateId') || '')
   const key = String(formData.get('key') || '').trim().toLowerCase().replace(/\s+/g, '_')
@@ -345,7 +346,7 @@ export async function updateStaffPermissionAction(formData: FormData) {
 }
 
 export async function processNotificationQueueAction(formData: FormData) {
-  const session = await requireRole(['ADMIN', 'STAFF'])
+  const session = await requireAdminOrStaffPermission('canManageRules')
   const redirectPath = String(formData.get('redirectPath') || '/admin/notifications')
   const limit = Number(formData.get('limit') || 20)
   const result = await processNotificationQueue(Number.isFinite(limit) ? limit : 20)

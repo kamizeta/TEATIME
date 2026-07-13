@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcrypt'
 import { prisma } from '@/lib/prisma'
 import type { AppRole } from '@/lib/navigation'
+import { getJwtSecret } from '@/lib/security'
 
 type SessionPayload = {
   userId: string
@@ -11,7 +12,9 @@ type SessionPayload = {
 
 const COOKIE_NAME = 'asistencia_session'
 const SESSION_TTL_SECONDS = 60 * 60 * 12
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-insecure')
+function sessionSecret() {
+  return new TextEncoder().encode(getJwtSecret())
+}
 
 export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash)
@@ -26,7 +29,7 @@ export async function createSession(userId: string, role: AppRole) {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
-    .sign(secret)
+    .sign(sessionSecret())
 
   cookies().set(COOKIE_NAME, token, {
     path: '/',
@@ -46,7 +49,7 @@ export async function getSession() {
   if (!token) return null
 
   try {
-    const { payload } = await jwtVerify(token, secret)
+    const { payload } = await jwtVerify(token, sessionSecret())
     return payload as SessionPayload
   } catch {
     return null

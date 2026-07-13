@@ -4,7 +4,7 @@ import { syncClassEventToGoogleCalendar } from '@/lib/google-calendar'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requireRole(['ADMIN', 'STAFF'])
+  const session = await requireRole(['ADMIN'])
   const body = await request.json().catch(() => ({}))
   const operation = body.operation === 'cancel' ? 'cancel' : 'upsert'
   const result = await syncClassEventToGoogleCalendar(params.id, operation)

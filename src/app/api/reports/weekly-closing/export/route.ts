@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRole } from '@/lib/auth'
+import { requireAdminOrStaffPermission } from '@/lib/staff-permissions'
 import { prisma } from '@/lib/prisma'
 
 function getWeekBounds(raw?: string | null) {
@@ -21,7 +21,7 @@ function csvCell(value: unknown) {
 }
 
 export async function GET(request: NextRequest) {
-  await requireRole(['ADMIN', 'STAFF'])
+  await requireAdminOrStaffPermission('canCloseWeeks')
   const { searchParams } = new URL(request.url)
   const { weekStart, weekEnd } = getWeekBounds(searchParams.get('week'))
 

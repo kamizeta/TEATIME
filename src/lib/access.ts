@@ -12,8 +12,8 @@ const INVITATION_HOURS = 72
 const TEMPORARY_PASSWORD_HOURS = 24
 
 export function normalizePortalAccessMode(value: string | null | undefined): PortalAccessMode {
-  if (value === 'INVITATION' || value === 'NO_PORTAL') return value
-  return 'TEST_GLOBAL'
+  if (value === 'TEST_GLOBAL' || value === 'INVITATION' || value === 'NO_PORTAL') return value
+  return 'INVITATION'
 }
 
 export function isPortalRole(role: UserRole) {
@@ -21,11 +21,11 @@ export function isPortalRole(role: UserRole) {
 }
 
 export function isAccessTestMode() {
-  return process.env.ACCESS_TEST_MODE !== 'false'
+  return process.env.ACCESS_TEST_MODE === 'true'
 }
 
 export function getTestGlobalPortalPassword() {
-  return process.env.TEST_GLOBAL_PORTAL_PASSWORD || 'teatime123'
+  return process.env.TEST_GLOBAL_PORTAL_PASSWORD || ''
 }
 
 export function canUseTestGlobalPortalPassword(role: UserRole, password: string) {
@@ -45,7 +45,8 @@ function getAppBaseUrl() {
 }
 
 export async function buildNewUserAccess(role: UserRole, requestedMode: PortalAccessMode) {
-  const mode = isPortalRole(role) ? requestedMode : 'INVITATION'
+  const requestedPortalMode = isPortalRole(role) ? requestedMode : 'INVITATION'
+  const mode = requestedPortalMode === 'TEST_GLOBAL' && !isAccessTestMode() ? 'INVITATION' : requestedPortalMode
   const usesGlobalPassword = mode === 'TEST_GLOBAL' && isAccessTestMode()
   return {
     mode,

@@ -5,7 +5,7 @@ function toLegacyHourUnits(minutes: number) {
 }
 
 export function shouldConsumeAttendance(status: AttendanceStatus) {
-  return status === 'attended' || status === 'late'
+  return status === 'attended' || status === 'late' || status === 'absent' || status === 'no_show'
 }
 
 export function buildLedgerReleaseUpdate(reservedMinutes: number): Prisma.HourPackageUpdateInput {

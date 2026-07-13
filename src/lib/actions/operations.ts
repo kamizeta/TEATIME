@@ -11,6 +11,10 @@ function toLegacyHourUnits(minutes: number) {
   return Math.ceil(minutes / 60)
 }
 
+function csvValues(value: string) {
+  return value.split(',').map((item) => item.trim()).filter(Boolean)
+}
+
 function withQuery(path: string, entries: Record<string, string>) {
   const [pathname, query = ''] = path.split('?')
   const params = new URLSearchParams(query)
@@ -56,6 +60,21 @@ export async function createManualClassAction(formData: FormData) {
 
   if (classType === 'ONE_ON_ONE' && packages.length !== 1) {
     redirect(withQuery(redirectPath, { ops: 'error', code: 'ONE_ON_ONE_REQUIRES_ONE_STUDENT' }))
+  }
+
+  const assignments = await prisma.studentTeacherAssignment.findMany({
+    where: {
+      teacherId,
+      studentId: { in: packages.map((pack) => pack.studentId) },
+      isPrimary: true,
+      OR: [{ endsAt: null }, { endsAt: { gte: new Date() } }],
+    },
+  })
+  if (assignments.length !== packages.length) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'STUDENT_NOT_ASSIGNED_TO_TEACHER' }))
+  }
+  if (packages.some((pack) => !csvValues(pack.allowedClassTypes).includes(classType) || !csvValues(pack.allowedDurations).includes(String(durationMinutes)))) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'PACKAGE_CLASS_RULE_MISMATCH' }))
   }
 
   const languages = [...new Set(packages.map((pack) => normalizeClassLanguage(pack.classLanguage)))]
@@ -191,6 +210,24 @@ export async function rescheduleClassAction(formData: FormData) {
     redirect(withQuery(redirectPath, { ops: 'error', code: 'CLASS_NOT_EDITABLE' }))
   }
 
+  if (classEvent.enrollments.some((enrollment) =>
+    !csvValues(enrollment.package.allowedClassTypes).includes(classEvent.classType) ||
+    !csvValues(enrollment.package.allowedDurations).includes(String(durationMinutes))
+  )) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'PACKAGE_CLASS_RULE_MISMATCH' }))
+  }
+  const reassignment = await prisma.studentTeacherAssignment.count({
+    where: {
+      teacherId,
+      studentId: { in: classEvent.enrollments.map((enrollment) => enrollment.studentId) },
+      isPrimary: true,
+      OR: [{ endsAt: null }, { endsAt: { gte: new Date() } }],
+    },
+  })
+  if (reassignment !== classEvent.enrollments.length) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'STUDENT_NOT_ASSIGNED_TO_TEACHER' }))
+  }
+
   const conflict = await prisma.classEvent.findFirst({
     where: {
       id: { not: classId },
@@ -305,6 +342,19 @@ export async function addStudentToClassAction(formData: FormData) {
   }
   if (classEvent.enrollments.some((item) => item.studentId === hourPackage.studentId)) {
     redirect(withQuery(redirectPath, { ops: 'error', code: 'STUDENT_ALREADY_BOOKED' }))
+  }
+
+  const assignment = await prisma.studentTeacherAssignment.findFirst({
+    where: {
+      studentId: hourPackage.studentId,
+      teacherId: classEvent.teacherId,
+      isPrimary: true,
+      OR: [{ endsAt: null }, { endsAt: { gte: new Date() } }],
+    },
+  })
+  if (!assignment) redirect(withQuery(redirectPath, { ops: 'error', code: 'STUDENT_NOT_ASSIGNED_TO_TEACHER' }))
+  if (!csvValues(hourPackage.allowedClassTypes).includes(classEvent.classType) || !csvValues(hourPackage.allowedDurations).includes(String(classEvent.durationMinutes))) {
+    redirect(withQuery(redirectPath, { ops: 'error', code: 'PACKAGE_CLASS_RULE_MISMATCH' }))
   }
 
   const durationMinutes = classEvent.durationMinutes || 60
@@ -459,7 +509,7 @@ export async function adjustPackageMinutesAction(formData: FormData) {
 }
 
 export async function syncClassWithGoogleAction(formData: FormData) {
-  const session = await requireRole(['ADMIN', 'STAFF'])
+  const session = await requireRole(['ADMIN'])
   const classId = String(formData.get('classId') || '')
   const redirectPath = String(formData.get('redirectPath') || `/admin/classes/${classId}`)
   if (!classId) redirect(withQuery(redirectPath, { ops: 'error', code: 'MISSING_CLASS_ID' }))
