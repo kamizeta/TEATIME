@@ -73,6 +73,7 @@ export default async function StudentOverview({
                 bookingContext.package.usedMinutes,
                 bookingContext.package.reservedMinutes,
               )}</strong>
+              <small>Clases: Tomadas / Programadas / Totales</small>
             </div>
           </aside>
         ) : null}
