@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createManualClassAction } from '@/lib/actions'
 import { formatMinutesLabel } from '@/lib/booking'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 function getOpsErrorMessage(code?: string) {
   if (code === 'TEACHER_TIME_CONFLICT') return 'El profesor ya tiene una clase en ese horario.'
@@ -245,7 +246,7 @@ export default async function AdminDashboard({
               <label htmlFor="meetUrl">Meet URL</label>
               <input id="meetUrl" name="meetUrl" className="input" placeholder="https://meet.google.com/..." />
             </div>
-            <button type="submit" className="button-primary ops-span-2">Crear clase y reservar saldo</button>
+            <DirtySubmitButton className="ops-span-2">Crear clase y reservar saldo</DirtySubmitButton>
           </form>
         </section>
 

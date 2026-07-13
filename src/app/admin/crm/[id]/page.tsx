@@ -12,6 +12,7 @@ import {
 } from '@/lib/actions'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 const contactStatusLabels: Record<ContactStatus, string> = {
   NEW: 'Nuevo',
@@ -178,9 +179,9 @@ export default async function CrmContactDetailPage({
               <label htmlFor="notes">Nota nueva</label>
               <textarea id="notes" name="notes" className="textarea" rows={3} placeholder="Qué pasó y qué sigue" />
             </div>
-            <button className="button-primary" type="submit">
+            <DirtySubmitButton>
               Actualizar contacto
-            </button>
+            </DirtySubmitButton>
           </form>
         </section>
       </div>
@@ -218,9 +219,9 @@ export default async function CrmContactDetailPage({
               <label htmlFor="body">Detalle</label>
               <textarea id="body" name="body" className="textarea" rows={4} placeholder="Notas internas del seguimiento" />
             </div>
-            <button className="button-primary" type="submit">
+            <DirtySubmitButton>
               Guardar actividad
-            </button>
+            </DirtySubmitButton>
           </form>
         </section>
 
@@ -259,9 +260,9 @@ export default async function CrmContactDetailPage({
               <p className="hint">
                 Se crea usuario alumno con contraseña temporal `alumno123`. En producción esto debe ser invitación segura.
               </p>
-              <button className="button-primary" type="submit" disabled={!contact.email}>
+              <DirtySubmitButton ready={Boolean(contact.email)}>
                 Convertir a alumno
-              </button>
+              </DirtySubmitButton>
               {!contact.email ? <p className="status-warning">No se puede convertir sin email.</p> : null}
             </form>
           )}

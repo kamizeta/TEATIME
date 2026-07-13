@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getWeekdayLabel } from '@/lib/booking'
 import { saveAvailabilityBlockAction } from '@/lib/actions/booking'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 export default async function TeacherAvailabilityPage() {
   const session = await getSession()
@@ -84,7 +85,7 @@ export default async function TeacherAvailabilityPage() {
           </div>
 
           <div className="toolbar">
-            <button type="submit" className="button-primary">Guardar bloque</button>
+            <DirtySubmitButton>Guardar bloque</DirtySubmitButton>
           </div>
         </form>
       </section>

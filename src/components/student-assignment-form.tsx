@@ -18,7 +18,8 @@ export function StudentAssignmentForm({
   teachers: TeacherOption[]
 }) {
   const [teacherId, setTeacherId] = useState(currentTeacherId)
-  const hasNewAssignment = Boolean(teacherId) && teacherId !== currentTeacherId
+  const [note, setNote] = useState('')
+  const hasNewAssignment = Boolean(teacherId) && (teacherId !== currentTeacherId || note.trim().length > 0)
 
   return (
     <form action={assignTeacherToStudentAction} className="inline-form">
@@ -32,7 +33,7 @@ export function StudentAssignmentForm({
           </option>
         ))}
       </select>
-      <input name="notes" className="input" placeholder="Nota" />
+      <input name="notes" className="input" placeholder="Nota" value={note} onChange={(event) => setNote(event.target.value)} />
       <button type="submit" className={hasNewAssignment ? 'button-primary' : 'button-ghost'}>
         Asignar
       </button>

@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getGoogleCalendarSettingsState } from '@/lib/google-calendar'
 import { saveAdminSettingsAction, syncGoogleCalendarAction } from '@/lib/actions'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 export default async function AdminSettings({
   searchParams,
@@ -167,9 +168,9 @@ export default async function AdminSettings({
 
             {canEdit ? (
               <div className="inline-actions">
-                <button type="submit" className="button-primary">
+                <DirtySubmitButton>
                   Guardar ajustes
-                </button>
+                </DirtySubmitButton>
                 <button formAction={syncGoogleCalendarAction} className="button-ghost">
                   Sincronizar ahora
                 </button>

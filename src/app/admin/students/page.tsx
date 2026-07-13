@@ -4,6 +4,7 @@ import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { convertCrmContactToStudentAction } from '@/lib/actions'
 import { formatMinutesLabel } from '@/lib/booking'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 import { StudentAssignmentForm } from '@/components/student-assignment-form'
 
 function getAssignmentErrorMessage(code?: string) {
@@ -114,9 +115,9 @@ export default async function AdminStudentsPage({
                       <small className="block-muted">Horas iniciales · Fecha de expiración de horas</small>
                     </td>
                     <td>
-                      <button form={`convert-${contact.id}`} type="submit" className="button-primary compact-button">
+                      <DirtySubmitButton form={`convert-${contact.id}`} className="compact-button">
                         Convertir
-                      </button>
+                      </DirtySubmitButton>
                     </td>
                   </tr>
                 ))}

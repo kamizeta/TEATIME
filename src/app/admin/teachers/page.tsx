@@ -5,6 +5,7 @@ import { UserRole } from '@prisma/client'
 import { createUserAction, updateUserAction } from '@/lib/actions'
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 function getMessage(code: string) {
   const messages: Record<string, string> = {
@@ -100,9 +101,9 @@ export default async function AdminTeachersPage({
               <label htmlFor="temporaryPassword">Contraseña temporal</label>
               <input id="temporaryPassword" name="temporaryPassword" className="input" defaultValue="teatime123" />
             </div>
-            <button type="submit" className="button-primary ops-span-2">
+            <DirtySubmitButton className="ops-span-2">
               Crear profesor
-            </button>
+            </DirtySubmitButton>
           </form>
         </section>
       ) : null}
@@ -158,9 +159,9 @@ export default async function AdminTeachersPage({
                       <label className="check-row">
                         <input type="checkbox" name="isActive" defaultChecked={teacher.user.isActive} /> Activo
                       </label>
-                      <button type="submit" className="button-ghost compact-button">
+                      <DirtySubmitButton className="compact-button">
                         Guardar
-                      </button>
+                      </DirtySubmitButton>
                     </form>
                   ) : (
                     'Solo lectura'

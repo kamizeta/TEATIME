@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createCrmContactAction, createNotificationDraftAction, updateCrmContactStatusAction } from '@/lib/actions'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 const statusLabels: Record<ContactStatus, string> = {
   NEW: 'Nuevo',
@@ -158,9 +159,9 @@ export default async function AdminCrmPage({
               <label htmlFor="notes">Notas</label>
               <textarea id="notes" name="notes" className="textarea" rows={4} placeholder="Necesidad, nivel, horario, objeciones..." />
             </div>
-            <button className="button-primary" type="submit">
+            <DirtySubmitButton>
               Crear contacto
-            </button>
+            </DirtySubmitButton>
           </form>
         </section>
 
@@ -242,9 +243,9 @@ export default async function AdminCrmPage({
                           ))}
                         </select>
                         <input name="notes" className="input compact-input" placeholder="Nota rápida" />
-                        <button className="button-ghost compact-button" type="submit">
+                        <DirtySubmitButton className="compact-button">
                           Actualizar
-                        </button>
+                        </DirtySubmitButton>
                       </form>
                       <form action={createNotificationDraftAction} className="inline-form">
                         <input type="hidden" name="redirectPath" value="/admin/crm" />

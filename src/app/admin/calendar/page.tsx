@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 function startOfWeek(date: Date) {
   const copy = new Date(date)
@@ -168,7 +169,7 @@ export default async function AdminCalendarPage({
           </div>
           <div className="stack-xs">
             <label>&nbsp;</label>
-            <button type="submit" className="button-primary">Aplicar filtros</button>
+            <DirtySubmitButton>Aplicar filtros</DirtySubmitButton>
           </div>
         </form>
       </section>

@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { formatMinutesLabel } from '@/lib/booking'
 import { closeClassAction } from '@/lib/actions/booking'
 import { addStudentToClassAction, rescheduleClassAction, submitCancellationAction, syncClassWithGoogleAction } from '@/lib/actions'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 function toDateTimeLocalValue(date: Date) {
   const year = date.getFullYear()
@@ -170,7 +171,7 @@ export default async function ClassDetail({
             <label htmlFor="meetUrl">Meet URL</label>
             <input id="meetUrl" name="meetUrl" className="input" defaultValue={ev.meetUrl || ''} />
           </div>
-          <button type="submit" className="button-primary ops-span-2">Guardar reprogramación</button>
+          <DirtySubmitButton className="ops-span-2">Guardar reprogramación</DirtySubmitButton>
         </form>
       </section>
 
@@ -193,7 +194,7 @@ export default async function ClassDetail({
                 ))}
               </select>
             </div>
-            <button type="submit" className="button-ghost ops-span-2">Agregar y reservar saldo</button>
+            <DirtySubmitButton className="ops-span-2">Agregar y reservar saldo</DirtySubmitButton>
           </form>
         </section>
       ) : null}

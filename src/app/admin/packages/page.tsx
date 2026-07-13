@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { formatMinutesLabel } from '@/lib/booking'
 import { adjustPackageMinutesAction } from '@/lib/actions'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 function getPackageErrorMessage(code?: string) {
   if (code === 'PACKAGE_TOTAL_WOULD_BELOW_COMMITTED') return 'El ajuste dejaría el paquete por debajo de lo ya usado o reservado.'
@@ -145,7 +146,7 @@ export default async function AdminPackages({
             <label htmlFor="note">Nota operativa</label>
             <input id="note" name="note" className="input" placeholder="Ajuste por compra extra, compensación o corrección." />
           </div>
-          <button type="submit" className="button-primary ops-span-2">Aplicar ajuste</button>
+          <DirtySubmitButton className="ops-span-2">Aplicar ajuste</DirtySubmitButton>
         </form>
       </section>
 

@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { createIncidentAction, updateIncidentAction } from '@/lib/actions'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 const typeLabels: Record<IncidentType, string> = {
   MISSING_ATTENDANCE: 'Asistencia faltante',
@@ -146,7 +147,7 @@ export default async function IncidentsPage({
               <label htmlFor="description">Descripción</label>
               <textarea id="description" name="description" className="textarea" rows={4} />
             </div>
-            <button type="submit" className="button-primary">Crear incidencia</button>
+            <DirtySubmitButton>Crear incidencia</DirtySubmitButton>
           </form>
         </section>
 
@@ -208,7 +209,7 @@ export default async function IncidentsPage({
                         {users.map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}
                       </select>
                       <input name="resolutionNote" className="input compact-input" placeholder="Nota resolución" />
-                      <button type="submit" className="button-ghost compact-button">Guardar</button>
+                      <DirtySubmitButton className="compact-button">Guardar</DirtySubmitButton>
                     </form>
                   </td>
                 </tr>

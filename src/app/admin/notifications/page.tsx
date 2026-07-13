@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createNotificationDraftAction, markNotificationStatusAction, processNotificationQueueAction } from '@/lib/actions'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 const statusLabels: Record<NotificationStatus, string> = {
   PENDING: 'Pendiente',
@@ -144,9 +145,9 @@ export default async function AdminNotificationsPage({
               <label htmlFor="subject">Asunto email opcional</label>
               <input id="subject" name="subject" className="input" placeholder="TEATIME Academy" />
             </div>
-            <button type="submit" className="button-primary">
+            <DirtySubmitButton>
               Agregar a cola
-            </button>
+            </DirtySubmitButton>
           </form>
         </section>
 
@@ -218,9 +219,9 @@ export default async function AdminNotificationsPage({
                         ))}
                       </select>
                       <input name="providerId" className="input compact-input" placeholder="ID proveedor" />
-                      <button className="button-ghost compact-button" type="submit">
+                      <DirtySubmitButton className="compact-button">
                         Guardar
-                      </button>
+                      </DirtySubmitButton>
                     </form>
                   </td>
                 </tr>

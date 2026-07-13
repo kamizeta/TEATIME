@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { saveMessageTemplateAction } from '@/lib/actions'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 const channelLabels: Record<MessageTemplateChannel, string> = {
   WHATSAPP: 'WhatsApp',
@@ -94,7 +95,7 @@ export default async function TemplatesPage({
           <label className="check-row ops-span-2">
             <input type="checkbox" name="isActive" defaultChecked /> Activa
           </label>
-          <button type="submit" className="button-primary ops-span-2">Guardar plantilla</button>
+          <DirtySubmitButton className="ops-span-2">Guardar plantilla</DirtySubmitButton>
         </form>
       </section>
 
@@ -129,7 +130,7 @@ export default async function TemplatesPage({
                     <input type="hidden" name="subject" value={template.subject || ''} />
                     <textarea name="body" className="textarea compact-textarea" defaultValue={template.body} />
                     <label className="check-row"><input type="checkbox" name="isActive" defaultChecked={template.isActive} /> Activa</label>
-                    <button className="button-ghost compact-button" type="submit">Guardar</button>
+                    <DirtySubmitButton className="compact-button">Guardar</DirtySubmitButton>
                   </form>
                 </td>
               </tr>

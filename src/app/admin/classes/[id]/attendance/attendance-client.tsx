@@ -22,6 +22,9 @@ export default function AttendanceClient({
   const [statusByStudent, setStatusByStudent] = useState<Record<string, string>>(
     Object.fromEntries(rows.map((row) => [row.studentId, row.status === 'pending' ? 'attended' : row.status]))
   )
+  const initialStatusByStudent = Object.fromEntries(
+    rows.map((row) => [row.studentId, row.status === 'pending' ? 'attended' : row.status]),
+  )
 
   const saveRow = (studentId: string) => {
     startTransition(async () => {
@@ -78,7 +81,12 @@ export default function AttendanceClient({
                 </select>
               </td>
               <td>
-                <button type="button" className="button-primary" onClick={() => saveRow(row.studentId)} disabled={isPending}>
+                <button
+                  type="button"
+                  className={statusByStudent[row.studentId] !== initialStatusByStudent[row.studentId] ? 'button-primary' : 'button-ghost'}
+                  onClick={() => saveRow(row.studentId)}
+                  disabled={isPending || statusByStudent[row.studentId] === initialStatusByStudent[row.studentId]}
+                >
                   Guardar
                 </button>
               </td>
