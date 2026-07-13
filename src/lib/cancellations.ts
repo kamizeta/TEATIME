@@ -84,7 +84,7 @@ export async function requestCancellation(input: {
       const enrollment = requesterEnrollment
       if (!enrollment) throw new Error('STUDENT_NOT_ENROLLED')
 
-      const reservedMinutes = enrollment.reservedMinutes || classEvent.durationMinutes || 60
+      const reservedMinutes = enrollment.reservedMinutes
       if (reservedMinutes > 0) {
         await tx.hourPackage.update({
           where: { id: enrollment.packageId },
@@ -116,7 +116,7 @@ export async function requestCancellation(input: {
     }
 
     for (const enrollment of classEvent.enrollments.filter((item) => item.status === 'CONFIRMED')) {
-      const reservedMinutes = enrollment.reservedMinutes || classEvent.durationMinutes || 60
+      const reservedMinutes = enrollment.reservedMinutes
       if (reservedMinutes > 0) {
         await tx.hourPackage.update({
           where: { id: enrollment.packageId },

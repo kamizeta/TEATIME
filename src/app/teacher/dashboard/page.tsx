@@ -23,6 +23,8 @@ export default async function TeacherDashboard({
     },
     orderBy: { startAt: 'asc' },
   })
+  const completedClasses = rows.filter((classEvent) => classEvent.status === 'COMPLETED').length
+  const programmedClasses = rows.filter((classEvent) => classEvent.status !== 'CANCELED').length
 
   return (
     <div className="page-stack">
@@ -32,6 +34,10 @@ export default async function TeacherDashboard({
         <p className="page-lead">Desde aquí vas a cerrar clases rápido y luego publicar disponibilidad para reservas.</p>
         <div className="toolbar">
           <Link href="/teacher/availability" className="button-primary">Mi disponibilidad</Link>
+        </div>
+        <div className="metric-row">
+          <span className="status-pill">Clases realizadas: {completedClasses} / {programmedClasses}</span>
+          <span className="status-pill">Realizadas / programadas</span>
         </div>
       </section>
 

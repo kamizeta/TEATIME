@@ -50,6 +50,21 @@ export default async function AdminTeachersPage({
     },
     orderBy: { user: { name: 'asc' } },
   })
+  const classCounts = teachers.length ? await prisma.classEvent.groupBy({
+    by: ['teacherId', 'status'],
+    where: {
+      teacherId: { in: teachers.map((teacher) => teacher.id) },
+      status: { in: ['SCHEDULED', 'RESERVED', 'COMPLETED'] },
+    },
+    _count: { _all: true },
+  }) : []
+  const classProgressByTeacher = new Map<string, { completed: number; programmed: number }>()
+  for (const count of classCounts) {
+    const current = classProgressByTeacher.get(count.teacherId) || { completed: 0, programmed: 0 }
+    current.programmed += count._count._all
+    if (count.status === 'COMPLETED') current.completed += count._count._all
+    classProgressByTeacher.set(count.teacherId, current)
+  }
 
   return (
     <div className="page-stack">
@@ -125,38 +140,43 @@ export default async function AdminTeachersPage({
             </tr>
           </thead>
           <tbody>
-            {teachers.map((teacher) => canEdit ? (
-              <TeacherDirectoryRow
-                key={teacher.id}
-                teacher={{
-                  id: teacher.id,
-                  userId: teacher.user.id,
-                  name: teacher.user.name,
-                  email: teacher.user.email,
-                  phoneE164: teacher.user.phoneE164,
-                  isActive: teacher.user.isActive,
-                  studentNames: teacher.studentAssignments.map((assignment) => assignment.student.user.name),
-                  availabilityCount: teacher.availabilityBlocks.length,
-                  nextClass: teacher.classEvents[0] ? {
-                    title: teacher.classEvents[0].title,
-                    startsAt: teacher.classEvents[0].startAt.toISOString(),
-                  } : null,
-                }}
-              />
-            ) : (
-              <tr key={teacher.id}>
-                <td>{teacher.user.name}</td>
-                <td>{teacher.user.email}</td>
-                <td>{teacher.user.phoneE164 || 'Sin teléfono'}</td>
-                <td>{teacher.user.isActive ? 'Activo' : 'Inactivo'}</td>
-                <td>{teacher.studentAssignments.map((assignment) => assignment.student.user.name).join(', ') || 'Sin alumnos'}</td>
-                <td>{teacher.availabilityBlocks.length} bloques</td>
-                <td>{teacher.classEvents[0] ? teacher.classEvents[0].startAt.toLocaleString('es-CO') : 'Sin próximas clases'}</td>
-                <td className="teacher-directory-actions">
-                  <Link href={`/admin/teachers/${teacher.id}`} className="button-link compact-button">Ver detalle</Link>
-                </td>
-              </tr>
-            ))}
+            {teachers.map((teacher) => {
+              const classProgress = classProgressByTeacher.get(teacher.id) || { completed: 0, programmed: 0 }
+              return canEdit ? (
+                <TeacherDirectoryRow
+                  key={teacher.id}
+                  teacher={{
+                    id: teacher.id,
+                    userId: teacher.user.id,
+                    name: teacher.user.name,
+                    email: teacher.user.email,
+                    phoneE164: teacher.user.phoneE164,
+                    isActive: teacher.user.isActive,
+                    studentNames: teacher.studentAssignments.map((assignment) => assignment.student.user.name),
+                    availabilityCount: teacher.availabilityBlocks.length,
+                    completedClasses: classProgress.completed,
+                    programmedClasses: classProgress.programmed,
+                    nextClass: teacher.classEvents[0] ? {
+                      title: teacher.classEvents[0].title,
+                      startsAt: teacher.classEvents[0].startAt.toISOString(),
+                    } : null,
+                  }}
+                />
+              ) : (
+                <tr key={teacher.id}>
+                  <td>{teacher.user.name}</td>
+                  <td>{teacher.user.email}</td>
+                  <td>{teacher.user.phoneE164 || 'Sin teléfono'}</td>
+                  <td>{teacher.user.isActive ? 'Activo' : 'Inactivo'}</td>
+                  <td>{teacher.studentAssignments.map((assignment) => assignment.student.user.name).join(', ') || 'Sin alumnos'}</td>
+                  <td>{teacher.availabilityBlocks.length} bloques</td>
+                  <td>{classProgress.completed} / {classProgress.programmed} realizadas / programadas</td>
+                  <td className="teacher-directory-actions">
+                    <Link href={`/admin/teachers/${teacher.id}`} className="button-link compact-button">Ver detalle</Link>
+                  </td>
+                </tr>
+              )
+            })}
             {!teachers.length ? (
               <tr>
                 <td colSpan={8}>No hay profesores creados.</td>

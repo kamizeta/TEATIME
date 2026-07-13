@@ -907,6 +907,61 @@ h3 {
   gap: 10px;
 }
 
+.student-plan-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.72fr);
+  gap: 32px;
+  align-items: center;
+}
+
+.student-plan-copy .toolbar {
+  margin-top: 22px;
+}
+
+.student-plan-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.student-summary-card {
+  display: grid;
+  gap: 6px;
+  min-height: 110px;
+  padding: 18px;
+  border: 1px solid rgba(62, 91, 116, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.student-summary-card span,
+.student-summary-card small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.student-summary-card strong {
+  color: var(--ink);
+  font-family: Montserrat, sans-serif;
+  font-size: 1.15rem;
+}
+
+.student-summary-trace {
+  grid-column: 1 / -1;
+  min-height: auto;
+  background: linear-gradient(135deg, rgba(234, 84, 52, 0.1), rgba(110, 193, 228, 0.12));
+}
+
+.student-summary-trace strong {
+  color: var(--brand);
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+}
+
+.teacher-next-class {
+  display: block;
+  margin-top: 8px;
+}
+
 .empty-state {
   padding: 18px;
   border: 1px dashed var(--line);
@@ -1118,7 +1173,8 @@ h3 {
   .settings-grid,
   .auth-shell,
   .ops-grid,
-  .teacher-detail-grid {
+  .teacher-detail-grid,
+  .student-plan-hero {
     grid-template-columns: 1fr;
   }
 
@@ -1208,6 +1264,14 @@ h3 {
   .kpi-grid,
   .alert-grid {
     grid-template-columns: 1fr;
+  }
+
+  .student-plan-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .student-summary-trace {
+    grid-column: auto;
   }
 
   .calendar-filters {

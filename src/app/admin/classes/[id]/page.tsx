@@ -23,6 +23,9 @@ function getOpsErrorMessage(code?: string) {
   if (code === 'INSUFFICIENT_PACKAGE_BALANCE') return 'El paquete no tiene saldo suficiente para esa operación.'
   if (code === 'INVALID_START_AT') return 'La fecha y hora de inicio no es válida.'
   if (code === 'CLASS_NOT_EDITABLE') return 'La clase ya está cerrada o cancelada.'
+  if (code === 'CLASS_CANCELED') return 'Una clase cancelada no se puede cerrar ni consumir.'
+  if (code === 'CLASS_NOT_FINISHED') return 'La clase solo se puede cerrar después de su hora de finalización.'
+  if (code === 'MISSING_ATTENDANCE') return 'Registra la asistencia de todos los alumnos antes de cerrar la clase.'
   if (code === 'CLASS_NOT_GROUP') return 'Solo puedes agregar alumnos manualmente a clases grupales.'
   if (code === 'GROUP_CLASS_FULL') return 'La clase grupal ya está llena.'
   if (code === 'STUDENT_ALREADY_BOOKED') return 'Ese alumno ya está inscrito en esta clase.'
@@ -132,7 +135,13 @@ export default async function ClassDetail({
           </form>
           <form action={closeClassAction}>
             <input type="hidden" name="classId" value={ev.id} />
-            <button type="submit" className="button-ghost">Cerrar clase y consumir saldo</button>
+            <button
+              type="submit"
+              className="button-ghost"
+              disabled={ev.status === 'COMPLETED' || ev.status === 'CANCELED' || ev.endAt.getTime() > Date.now()}
+            >
+              Cerrar clase y procesar saldo
+            </button>
           </form>
         </div>
       </section>

@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createAvailabilityBlockForTeacher, createBookingForStudent } from '@/lib/booking'
 import { requireRole } from '@/lib/auth'
@@ -62,11 +63,24 @@ export async function closeClassAction(formData: FormData) {
 
   if (!classEvent) throw new Error('CLASS_NOT_FOUND')
   if (classEvent.status === 'COMPLETED') throw new Error('CLASS_ALREADY_CLOSED')
+  if (classEvent.status === 'CANCELED') {
+    redirect(`/admin/classes/${classId}?ops=error&code=CLASS_CANCELED`)
+  }
+  if (classEvent.endAt.getTime() > Date.now()) {
+    redirect(`/admin/classes/${classId}?ops=error&code=CLASS_NOT_FINISHED`)
+  }
+
+  const confirmedEnrollments = classEvent.enrollments.filter((enrollment) => enrollment.status === 'CONFIRMED')
+  if (confirmedEnrollments.some((enrollment) => !enrollment.attendance)) {
+    redirect(`/admin/classes/${classId}?ops=error&code=MISSING_ATTENDANCE`)
+  }
 
   await prisma.$transaction(async (tx) => {
-    for (const enrollment of classEvent.enrollments) {
-      const reservedMinutes = enrollment.reservedMinutes || classEvent.durationMinutes
+    for (const enrollment of confirmedEnrollments) {
+      const reservedMinutes = enrollment.reservedMinutes
       const attendanceStatus = enrollment.attendance?.status
+
+      if (reservedMinutes <= 0) continue
 
       if (attendanceStatus && shouldConsumeAttendance(attendanceStatus)) {
         await tx.hourPackage.update({
@@ -110,4 +124,6 @@ export async function closeClassAction(formData: FormData) {
   revalidatePath('/admin/packages')
   revalidatePath('/student/home')
   revalidatePath('/teacher/today')
+  revalidatePath('/teacher/dashboard')
+  revalidatePath(`/admin/teachers/${classEvent.teacherId}`)
 }

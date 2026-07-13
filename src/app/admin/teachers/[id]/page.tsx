@@ -51,6 +51,10 @@ export default async function AdminTeacherDetailPage({ params }: { params: { id:
   })
 
   if (!teacher) return notFound()
+  const [completedClasses, programmedClasses] = await Promise.all([
+    prisma.classEvent.count({ where: { teacherId: teacher.id, status: 'COMPLETED' } }),
+    prisma.classEvent.count({ where: { teacherId: teacher.id, status: { in: ['SCHEDULED', 'RESERVED', 'COMPLETED'] } } }),
+  ])
 
   return (
     <div className="page-stack">
@@ -64,6 +68,7 @@ export default async function AdminTeacherDetailPage({ params }: { params: { id:
           <span className="status-pill">{teacher.user.isActive ? 'Profesor activo' : 'Profesor inactivo'}</span>
           <span className="status-pill">{teacher.studentAssignments.length} alumnos</span>
           <span className="status-pill">{teacher.availabilityBlocks.length} bloques disponibles</span>
+          <span className="status-pill">{completedClasses} / {programmedClasses} realizadas / programadas</span>
           <span className="status-pill">{teacher.classEvents.length} clases próximas</span>
         </div>
         <div className="inline-actions">

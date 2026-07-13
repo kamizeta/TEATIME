@@ -3,8 +3,22 @@ export const dynamic = "force-dynamic"
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
-import { formatMinutesLabel, getPrimaryBookingContextForUser } from '@/lib/booking'
+import { formatMinutesLabel, formatPackageProgress, getPackageProgress, getPrimaryBookingContextForUser } from '@/lib/booking'
 import { submitCancellationAction } from '@/lib/actions'
+
+const classStatusLabels: Record<string, string> = {
+  SCHEDULED: 'Programada',
+  RESERVED: 'Reservada',
+  COMPLETED: 'Finalizada',
+  CANCELED: 'Cancelada',
+}
+
+const attendanceLabels: Record<string, string> = {
+  attended: 'Asistió',
+  absent: 'Ausente',
+  late: 'Llegó tarde',
+  no_show: 'No se presentó',
+}
 
 export default async function StudentOverview({
   searchParams,
@@ -27,25 +41,45 @@ export default async function StudentOverview({
     orderBy: { classEvent: { startAt: 'asc' } }
   })
   const bookingContext = await getPrimaryBookingContextForUser(session.userId)
-  const remainingMinutes = bookingContext
-    ? bookingContext.package.totalMinutes - bookingContext.package.usedMinutes - bookingContext.package.reservedMinutes
-    : 0
+  const packageProgress = bookingContext
+    ? getPackageProgress(
+        bookingContext.package.totalMinutes,
+        bookingContext.package.usedMinutes,
+        bookingContext.package.reservedMinutes,
+      )
+    : null
 
   return (
     <div className="page-stack">
-      <section className="hero">
-        <p className="eyebrow">Student</p>
-        <h1 className="page-title">Tu plan de clases</h1>
-        <p className="page-lead">Aquí vas a ver tu saldo, tu agenda y luego vas a reservar tus siguientes espacios.</p>
-        <div className="toolbar">
-          <Link href="/student/book" className="button-primary">Reservar clase</Link>
-          <Link href="/student/home" className="button-ghost">Volver a inicio</Link>
-        </div>
-        {bookingContext ? (
-          <div className="metric-row">
-            <span className="status-pill">Profesor asignado: {bookingContext.teacher.userName}</span>
-            <span className="status-pill">Saldo disponible: {formatMinutesLabel(remainingMinutes)}</span>
+      <section className="hero student-plan-hero">
+        <div className="student-plan-copy">
+          <p className="eyebrow">Alumno</p>
+          <h1 className="page-title">Tu plan de clases</h1>
+          <p className="page-lead">Consulta tus clases tomadas, programadas y las horas que aún puedes reservar.</p>
+          <div className="toolbar">
+            <Link href="/student/book" className="button-primary">Reservar clase</Link>
           </div>
+        </div>
+        {bookingContext && packageProgress ? (
+          <aside className="student-plan-summary" aria-label="Resumen del plan de clases">
+            <div className="student-summary-card">
+              <span>Profesor asignado</span>
+              <strong>{bookingContext.teacher.userName}</strong>
+            </div>
+            <div className="student-summary-card">
+              <span>Saldo disponible</span>
+              <strong>{formatMinutesLabel(packageProgress.availableMinutes)}</strong>
+            </div>
+            <div className="student-summary-card student-summary-trace">
+              <span>Seguimiento del paquete</span>
+              <strong>{formatPackageProgress(
+                bookingContext.package.totalMinutes,
+                bookingContext.package.usedMinutes,
+                bookingContext.package.reservedMinutes,
+              )}</strong>
+              <small>Tomadas / programadas / contratadas</small>
+            </div>
+          </aside>
         ) : null}
       </section>
 
@@ -70,37 +104,43 @@ export default async function StudentOverview({
               <th>Inicio</th>
               <th>Estado clase</th>
               <th>Asistencia</th>
-              <th>Saldo</th>
+              <th>Seguimiento del paquete</th>
               <th>Acción</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.id}>
-                <td>{row.classEvent.title}</td>
-                <td>{new Date(row.classEvent.startAt).toLocaleString('es-CO')}</td>
-                <td>{row.classEvent.status}</td>
-                <td>{row.attendance?.status || 'pendiente'}</td>
-                <td>{formatMinutesLabel(row.package.usedMinutes)}/{formatMinutesLabel(row.package.totalMinutes)}</td>
-                <td>
-                  {row.status !== 'CONFIRMED' || row.classEvent.status === 'CANCELED' || row.classEvent.status === 'COMPLETED' ? (
-                    <span className="muted">Sin acción</span>
-                  ) : (
-                    <form action={submitCancellationAction}>
-                      <input type="hidden" name="classId" value={row.classEventId} />
-                      <input type="hidden" name="scope" value="SELF" />
-                      <input type="hidden" name="redirectPath" value="/student/home" />
-                      <input
-                        type="hidden"
-                        name="reason"
-                        value="Clase cancelada por el alumno desde su portal para reprogramación."
-                      />
-                      <button type="submit" className="button-ghost">Cancelar y reprogramar</button>
-                    </form>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const trace = formatPackageProgress(row.package.totalMinutes, row.package.usedMinutes, row.package.reservedMinutes)
+              return (
+                <tr key={row.id}>
+                  <td>{row.classEvent.title}</td>
+                  <td>{new Date(row.classEvent.startAt).toLocaleString('es-CO')}</td>
+                  <td>{classStatusLabels[row.classEvent.status] || row.classEvent.status}</td>
+                  <td>{row.attendance?.status ? attendanceLabels[row.attendance.status] || row.attendance.status : 'Pendiente'}</td>
+                  <td>
+                    <strong>{trace}</strong>
+                    <small className="block-muted">Tomadas / programadas / contratadas</small>
+                  </td>
+                  <td>
+                    {row.status !== 'CONFIRMED' || row.classEvent.status === 'CANCELED' || row.classEvent.status === 'COMPLETED' ? (
+                      <span className="muted">Sin acción</span>
+                    ) : (
+                      <form action={submitCancellationAction}>
+                        <input type="hidden" name="classId" value={row.classEventId} />
+                        <input type="hidden" name="scope" value="SELF" />
+                        <input type="hidden" name="redirectPath" value="/student/home" />
+                        <input
+                          type="hidden"
+                          name="reason"
+                          value="Clase cancelada por el alumno desde su portal para reprogramación."
+                        />
+                        <button type="submit" className="button-ghost">Cancelar y reprogramar</button>
+                      </form>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </section>

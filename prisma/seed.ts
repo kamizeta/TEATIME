@@ -236,6 +236,23 @@ async function main() {
     },
   })
 
+  const packageReservations = await prisma.classEnrollment.aggregate({
+    where: {
+      packageId: pack.id,
+      status: 'CONFIRMED',
+      classEvent: { status: { in: ['SCHEDULED', 'RESERVED'] } },
+    },
+    _sum: { reservedMinutes: true },
+  })
+  const reservedMinutes = packageReservations._sum.reservedMinutes || 0
+  await prisma.hourPackage.update({
+    where: { id: pack.id },
+    data: {
+      reservedMinutes,
+      reservedHours: Math.ceil(reservedMinutes / 60),
+    },
+  })
+
   const existingIncident = await prisma.incident.findFirst({ where: { title: 'Demo: confirmar cierre de clase' } })
   if (!existingIncident) {
     await prisma.incident.create({

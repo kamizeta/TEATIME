@@ -14,6 +14,8 @@ type TeacherDirectoryRowProps = {
     isActive: boolean
     studentNames: string[]
     availabilityCount: number
+    completedClasses: number
+    programmedClasses: number
     nextClass: {
       title: string
       startsAt: string
@@ -102,9 +104,11 @@ export function TeacherDirectoryRow({ teacher }: TeacherDirectoryRowProps) {
         <small className="block-muted">bloques activos</small>
       </td>
       <td>
+        <strong>{teacher.completedClasses} / {teacher.programmedClasses}</strong>
+        <small className="block-muted">realizadas / programadas</small>
         {teacher.nextClass ? (
           <>
-            <strong>{new Date(teacher.nextClass.startsAt).toLocaleString('es-CO')}</strong>
+            <strong className="teacher-next-class">{new Date(teacher.nextClass.startsAt).toLocaleString('es-CO')}</strong>
             <small className="block-muted teacher-row-summary">{teacher.nextClass.title}</small>
           </>
         ) : (

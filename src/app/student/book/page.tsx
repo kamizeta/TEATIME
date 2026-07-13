@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/auth'
 import { bookSlotAction } from '@/lib/actions/booking'
-import { formatMinutesLabel, listBookableSlotsForStudent } from '@/lib/booking'
+import { formatMinutesLabel, formatPackageProgress, getPackageProgress, listBookableSlotsForStudent } from '@/lib/booking'
 
 export default async function StudentBookingPage() {
   const session = await getSession()
@@ -22,14 +22,16 @@ export default async function StudentBookingPage() {
     return acc
   }, {})
 
-  const packageSummary = formatMinutesLabel(
-    context.package.totalMinutes - context.package.usedMinutes - context.package.reservedMinutes
+  const packageProgress = getPackageProgress(
+    context.package.totalMinutes,
+    context.package.usedMinutes,
+    context.package.reservedMinutes,
   )
 
   return (
     <div className="page-stack">
       <section className="hero">
-        <p className="eyebrow">Booking</p>
+        <p className="eyebrow">Reserva</p>
         <h1 className="page-title">Reservar próxima clase</h1>
         <p className="page-lead">
           Ya estás viendo slots calculados desde la disponibilidad del profesor asignado. La reserva se valida contra
@@ -45,7 +47,10 @@ export default async function StudentBookingPage() {
         <div className="stack-md">
           <div className="metric-row">
             <span className="status-pill">Profesor asignado: {context.teacher.userName}</span>
-            <span className="status-pill">Saldo: {packageSummary}</span>
+            <span className="status-pill">Saldo disponible: {formatMinutesLabel(packageProgress.availableMinutes)}</span>
+            <span className="status-pill">
+              {formatPackageProgress(context.package.totalMinutes, context.package.usedMinutes, context.package.reservedMinutes)} · tomadas / programadas / contratadas
+            </span>
           </div>
           {slots.length ? (
             Object.entries(groupedSlots).map(([day, daySlots]) => (

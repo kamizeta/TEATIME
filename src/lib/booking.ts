@@ -119,6 +119,24 @@ export function formatMinutesLabel(totalMinutes: number) {
   return `${hours} h ${minutes} min`
 }
 
+export function getPackageProgress(totalMinutes: number, usedMinutes: number, reservedMinutes: number) {
+  const consumedMinutes = Math.max(usedMinutes, 0)
+  const scheduledMinutes = Math.max(consumedMinutes + reservedMinutes, consumedMinutes)
+  const availableMinutes = Math.max(totalMinutes - scheduledMinutes, 0)
+
+  return {
+    consumedMinutes,
+    scheduledMinutes,
+    contractedMinutes: totalMinutes,
+    availableMinutes,
+  }
+}
+
+export function formatPackageProgress(totalMinutes: number, usedMinutes: number, reservedMinutes: number) {
+  const progress = getPackageProgress(totalMinutes, usedMinutes, reservedMinutes)
+  return `${formatMinutesLabel(progress.consumedMinutes)} / ${formatMinutesLabel(progress.scheduledMinutes)} / ${formatMinutesLabel(progress.contractedMinutes)}`
+}
+
 export async function getPrimaryBookingContextForUser(userId: string): Promise<PrimaryBookingContext | null> {
   const student = await prisma.student.findUnique({
     where: { userId },
