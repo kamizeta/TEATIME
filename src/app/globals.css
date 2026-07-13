@@ -790,6 +790,51 @@ h3 {
   margin-bottom: 0;
 }
 
+.teacher-schedule-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.week-navigator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--secondary);
+}
+
+.week-navigator strong {
+  min-width: 124px;
+  text-align: center;
+  font-size: 0.86rem;
+}
+
+.week-nav-button {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--secondary);
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.week-nav-button:hover,
+.week-nav-button:focus-visible {
+  background: rgba(234, 84, 52, 0.12);
+  color: var(--brand);
+}
+
 .schedule-view-toggle {
   display: inline-flex;
   gap: 4px;
@@ -1480,6 +1525,12 @@ h3 {
   .meet-link-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .teacher-schedule-controls {
+    align-items: stretch;
+    justify-content: space-between;
+    flex-wrap: wrap;
   }
 
   .class-detail-workspace {

@@ -47,19 +47,41 @@ function formatTime(value: string) {
   })
 }
 
-function getWeekDays(classes: ScheduledClass[]) {
+function getWeekStart(classes: ScheduledClass[]) {
   const anchor = classes.find((item) => new Date(item.startAt) >= new Date()) || classes[0]
-  if (!anchor) return []
+  const anchorDate = anchor
+    ? new Date(`${dateKey(anchor.startAt)}T12:00:00-05:00`)
+    : new Date(`${dateKey(new Date())}T12:00:00-05:00`)
 
-  const anchorDate = new Date(`${dateKey(anchor.startAt)}T12:00:00-05:00`)
   const mondayOffset = (anchorDate.getUTCDay() + 6) % 7
   anchorDate.setUTCDate(anchorDate.getUTCDate() - mondayOffset)
+  return anchorDate
+}
 
+function getWeekDays(weekStart: Date) {
   return Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(anchorDate)
-    day.setUTCDate(anchorDate.getUTCDate() + index)
+    const day = new Date(weekStart)
+    day.setUTCDate(weekStart.getUTCDate() + index)
     return day
   })
+}
+
+function moveWeek(weekStart: Date, amount: number) {
+  const nextWeek = new Date(weekStart)
+  nextWeek.setUTCDate(nextWeek.getUTCDate() + amount * 7)
+  return nextWeek
+}
+
+function formatWeekRange(weekDays: Date[]) {
+  if (!weekDays.length) return ''
+  const first = weekDays[0]
+  const last = weekDays[6]
+  const formatter = new Intl.DateTimeFormat('es-CO', {
+    timeZone: BOGOTA_TIMEZONE,
+    day: 'numeric',
+    month: 'short',
+  })
+  return `${formatter.format(first)} - ${formatter.format(last)}`
 }
 
 function CancellationAction({ classId }: { classId: string }) {
@@ -76,7 +98,8 @@ function CancellationAction({ classId }: { classId: string }) {
 
 export function TeacherSchedule({ classes }: { classes: ScheduledClass[] }) {
   const [view, setView] = useState<'list' | 'calendar'>('list')
-  const weekDays = getWeekDays(classes)
+  const [weekStart, setWeekStart] = useState(() => getWeekStart(classes))
+  const weekDays = getWeekDays(weekStart)
 
   return (
     <section className="panel teacher-schedule-panel">
@@ -85,9 +108,18 @@ export function TeacherSchedule({ classes }: { classes: ScheduledClass[] }) {
           <p className="eyebrow">Agenda</p>
           <h2>Clases asignadas</h2>
         </div>
-        <div className="schedule-view-toggle" aria-label="Vista de agenda">
-          <button type="button" className={view === 'list' ? 'is-active' : ''} onClick={() => setView('list')}>Lista</button>
-          <button type="button" className={view === 'calendar' ? 'is-active' : ''} onClick={() => setView('calendar')}>Calendario</button>
+        <div className="teacher-schedule-controls">
+          {view === 'calendar' ? (
+            <div className="week-navigator" aria-label="Navegación semanal">
+              <button type="button" className="week-nav-button" aria-label="Semana anterior" onClick={() => setWeekStart((current) => moveWeek(current, -1))}>←</button>
+              <strong>{formatWeekRange(weekDays)}</strong>
+              <button type="button" className="week-nav-button" aria-label="Semana siguiente" onClick={() => setWeekStart((current) => moveWeek(current, 1))}>→</button>
+            </div>
+          ) : null}
+          <div className="schedule-view-toggle" aria-label="Vista de agenda">
+            <button type="button" className={view === 'list' ? 'is-active' : ''} onClick={() => setView('list')}>Lista</button>
+            <button type="button" className={view === 'calendar' ? 'is-active' : ''} onClick={() => setView('calendar')}>Calendario</button>
+          </div>
         </div>
       </div>
 
