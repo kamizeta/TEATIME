@@ -636,6 +636,51 @@ h3 {
   overflow: hidden;
 }
 
+.users-table-panel {
+  overflow-x: auto;
+}
+
+.user-directory-table {
+  min-width: 1180px;
+  table-layout: fixed;
+}
+
+.user-directory-table th:nth-child(1) { width: 23%; }
+.user-directory-table th:nth-child(2) { width: 8%; }
+.user-directory-table th:nth-child(3) { width: 28%; }
+.user-directory-table th:nth-child(4) { width: 31%; }
+.user-directory-table th:nth-child(5) { width: 10%; }
+
+.user-edit-fields,
+.user-permission-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-edit-fields .compact-input:first-child {
+  width: 170px;
+}
+
+.user-edit-fields .compact-input:nth-child(2) {
+  width: 150px;
+}
+
+.user-active-toggle,
+.user-permission-controls .check-row {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.user-permission-controls {
+  flex-wrap: wrap;
+}
+
+.user-directory-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
 .metric-row {
   display: flex;
   flex-wrap: wrap;
