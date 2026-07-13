@@ -9,7 +9,7 @@ import { DirtySubmitButton } from '@/components/dirty-submit-button'
 
 const channelLabels: Record<MessageTemplateChannel, string> = {
   WHATSAPP: 'WhatsApp',
-  EMAIL: 'Email',
+  EMAIL: 'Correo electrónico',
   IN_APP: 'In-app',
 }
 

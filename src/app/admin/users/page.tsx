@@ -69,7 +69,7 @@ export default async function UsersPage({
               <input id="name" name="name" className="input" required />
             </div>
             <div className="stack-xs">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">Correo electrónico</label>
               <input id="email" name="email" type="email" className="input" required />
             </div>
             <div className="stack-xs">

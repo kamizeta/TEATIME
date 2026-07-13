@@ -42,7 +42,7 @@ export function LoginForm() {
       </div>
       <form onSubmit={onSubmit} className="stack-md">
         <div className="stack-xs">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">Correo electrónico</label>
           <input id="email" type="email" name="email" defaultValue="admin@academy.test" className="input" />
         </div>
         <div className="stack-xs">

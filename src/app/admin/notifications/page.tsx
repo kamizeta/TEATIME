@@ -117,7 +117,7 @@ export default async function AdminNotificationsPage({
                 <option value="WHATSAPP">WhatsApp</option>
                 <option value="EMAIL">Email</option>
                 <option value="CALENDAR">Google Calendar</option>
-                <option value="IN_APP">In-app</option>
+                <option value="IN_APP">En la aplicación</option>
               </select>
             </div>
             <div className="stack-xs">

@@ -115,7 +115,7 @@ export default async function AdminSettings({
             </div>
 
             <div className="stack-xs">
-              <label htmlFor="calendarId">Calendar ID activo</label>
+              <label htmlFor="calendarId">ID del calendario activo</label>
               {googleState.calendars.length ? (
                 <select
                   id="calendarId"
@@ -145,7 +145,7 @@ export default async function AdminSettings({
             </div>
 
             <div className="stack-xs">
-              <label htmlFor="fallbackTeacherEmail">Profesor fallback para importar eventos</label>
+              <label htmlFor="fallbackTeacherEmail">Profesor de respaldo para importar eventos</label>
               <select
                 id="fallbackTeacherEmail"
                 name="fallbackTeacherEmail"
@@ -161,8 +161,8 @@ export default async function AdminSettings({
                 ))}
               </select>
               <p className="hint">
-                Si tu calendario de prueba no trae un profesor identificable en organizer o attendees, usamos este
-                fallback para no bloquear la importación.
+                Si tu calendario de prueba no trae un profesor identificable entre organizador o invitados, usamos este
+                profesor de respaldo para no bloquear la importación.
               </p>
             </div>
 

@@ -103,7 +103,7 @@ export default async function AdminTeachersPage({
               <input id="teacherName" name="name" className="input" required />
             </div>
             <div className="stack-xs">
-              <label htmlFor="teacherEmail">Email</label>
+              <label htmlFor="teacherEmail">Correo electrónico</label>
               <input id="teacherEmail" name="email" type="email" className="input" required />
             </div>
             <div className="stack-xs">

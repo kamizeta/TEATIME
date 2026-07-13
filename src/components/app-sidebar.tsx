@@ -17,10 +17,10 @@ export function AppSidebar({ nav, role }: { nav: NavItem[]; role: AppRole }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-heading">
-        <span>Menu principal</span>
+        <span>Menú principal</span>
         <strong>{roleLabels[role]}</strong>
       </div>
-      <nav className="sidebar-nav" aria-label="Navegacion principal">
+      <nav className="sidebar-nav" aria-label="Navegación principal">
         {nav.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
           return (
