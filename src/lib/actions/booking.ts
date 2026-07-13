@@ -32,6 +32,51 @@ export async function saveAvailabilityBlockAction(formData: FormData) {
   revalidatePath('/teacher/availability')
 }
 
+export async function deactivateAvailabilityBlockAction(formData: FormData) {
+  const session = await requireRole(['ADMIN', 'STAFF', 'TEACHER'])
+  const blockId = String(formData.get('blockId') ?? '')
+  const redirectPath = String(formData.get('redirectPath') ?? '/teacher/availability')
+
+  if (!blockId) throw new Error('MISSING_AVAILABILITY_BLOCK_ID')
+
+  const block = await prisma.teacherAvailabilityBlock.findUnique({
+    where: { id: blockId },
+    include: { teacher: true },
+  })
+
+  if (!block) throw new Error('AVAILABILITY_BLOCK_NOT_FOUND')
+  if (session.role === 'TEACHER' && block.teacher.userId !== session.userId) {
+    throw new Error('FORBIDDEN_AVAILABILITY_BLOCK')
+  }
+
+  if (block.isActive) {
+    await prisma.$transaction(async (tx) => {
+      await tx.teacherAvailabilityBlock.update({
+        where: { id: block.id },
+        data: { isActive: false },
+      })
+      await tx.auditLog.create({
+        data: {
+          actorId: session.userId,
+          action: 'AVAILABILITY_BLOCK_DEACTIVATED',
+          entityType: 'TEACHER_AVAILABILITY_BLOCK',
+          entityId: block.id,
+          before: JSON.stringify({ isActive: true }),
+          after: JSON.stringify({ isActive: false }),
+        },
+      })
+    })
+  }
+
+  revalidatePath('/teacher/availability')
+  revalidatePath('/teacher/today')
+  revalidatePath('/student/book')
+  revalidatePath('/student/home')
+  revalidatePath('/admin/teachers')
+  revalidatePath(`/admin/teachers/${block.teacherId}`)
+  redirect(`${redirectPath}${redirectPath.includes('?') ? '&' : '?'}availability=deleted`)
+}
+
 export async function bookSlotAction(formData: FormData) {
   const session = await requireRole(['STUDENT'])
   const slotToken = String(formData.get('slotToken') || '')

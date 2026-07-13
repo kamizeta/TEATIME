@@ -6,6 +6,7 @@ import { requireRole } from '@/lib/auth'
 import { getWeekdayLabel } from '@/lib/booking'
 import { prisma } from '@/lib/prisma'
 import { UserAccessActions } from '@/components/user-access-actions'
+import { AvailabilityDeleteButton } from '@/components/availability-delete-button'
 
 const statusLabels: Record<string, string> = {
   SCHEDULED: 'Programada',
@@ -149,6 +150,10 @@ export default async function AdminTeacherDetailPage({ params }: { params: { id:
                   <span>{block.classType === 'GROUP' ? 'Grupal' : '1:1'}</span>
                   <small className="block-muted">{block.durationMinutes} min · cupo {block.capacity}</small>
                 </div>
+                <AvailabilityDeleteButton
+                  blockId={block.id}
+                  redirectPath={`/admin/teachers/${teacher.id}`}
+                />
               </article>
             ))}
             {!teacher.availabilityBlocks.length ? <p className="block-muted">No ha publicado disponibilidad.</p> : null}

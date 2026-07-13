@@ -5,8 +5,13 @@ import { prisma } from '@/lib/prisma'
 import { getWeekdayLabel } from '@/lib/booking'
 import { saveAvailabilityBlockAction } from '@/lib/actions/booking'
 import { DirtySubmitButton } from '@/components/dirty-submit-button'
+import { AvailabilityDeleteButton } from '@/components/availability-delete-button'
 
-export default async function TeacherAvailabilityPage() {
+export default async function TeacherAvailabilityPage({
+  searchParams,
+}: {
+  searchParams?: { availability?: string }
+}) {
   const session = await getSession()
   if (!session || session.role !== 'TEACHER') return <p>Sin sesión docente</p>
 
@@ -95,6 +100,9 @@ export default async function TeacherAvailabilityPage() {
           <p className="eyebrow">Bloques activos</p>
           <h2>Disponibilidad publicada</h2>
         </div>
+        {searchParams?.availability === 'deleted' ? (
+          <p className="status-success">Bloque eliminado de las futuras reservas.</p>
+        ) : null}
         {teacher.availabilityBlocks.length ? (
           <table>
             <thead>
@@ -104,6 +112,7 @@ export default async function TeacherAvailabilityPage() {
                 <th>Duración</th>
                 <th>Tipo</th>
                 <th>Cupo</th>
+                <th>Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -114,6 +123,9 @@ export default async function TeacherAvailabilityPage() {
                   <td>{block.durationMinutes} min</td>
                   <td>{block.classType === 'ONE_ON_ONE' ? '1:1' : 'Grupal'}</td>
                   <td>{block.capacity}</td>
+                  <td>
+                    <AvailabilityDeleteButton blockId={block.id} redirectPath="/teacher/availability" />
+                  </td>
                 </tr>
               ))}
             </tbody>
