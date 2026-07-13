@@ -58,6 +58,13 @@ function getWeekStart(classes: ScheduledClass[]) {
   return anchorDate
 }
 
+function getTodayWeekStart() {
+  const today = new Date(`${dateKey(new Date())}T12:00:00-05:00`)
+  const mondayOffset = (today.getUTCDay() + 6) % 7
+  today.setUTCDate(today.getUTCDate() - mondayOffset)
+  return today
+}
+
 function getWeekDays(weekStart: Date) {
   return Array.from({ length: 7 }, (_, index) => {
     const day = new Date(weekStart)
@@ -114,6 +121,7 @@ export function TeacherSchedule({ classes }: { classes: ScheduledClass[] }) {
               <button type="button" className="week-nav-button" aria-label="Semana anterior" onClick={() => setWeekStart((current) => moveWeek(current, -1))}>←</button>
               <strong>{formatWeekRange(weekDays)}</strong>
               <button type="button" className="week-nav-button" aria-label="Semana siguiente" onClick={() => setWeekStart((current) => moveWeek(current, 1))}>→</button>
+              <button type="button" className="week-today-button" onClick={() => setWeekStart(getTodayWeekStart())}>Volver a hoy</button>
             </div>
           ) : null}
           <div className="schedule-view-toggle" aria-label="Vista de agenda">
@@ -160,12 +168,17 @@ export function TeacherSchedule({ classes }: { classes: ScheduledClass[] }) {
         <div className="teacher-calendar-board">
           {weekDays.map((day) => {
             const key = dateKey(day)
+            const isToday = key === dateKey(new Date())
             const dayClasses = classes.filter((item) => dateKey(item.startAt) === key)
             return (
-              <section key={key} className="teacher-calendar-day">
+              <section key={key} className={`teacher-calendar-day${isToday ? ' is-today' : ''}`}>
                 <header>
                   <p>{day.toLocaleDateString('es-CO', { timeZone: BOGOTA_TIMEZONE, weekday: 'long' })}</p>
-                  <strong>{day.toLocaleDateString('es-CO', { timeZone: BOGOTA_TIMEZONE, day: '2-digit', month: 'short' })}</strong>
+                  <strong>
+                    {isToday
+                      ? `Hoy · ${day.toLocaleDateString('es-CO', { timeZone: BOGOTA_TIMEZONE, day: 'numeric', month: 'long' })}`
+                      : day.toLocaleDateString('es-CO', { timeZone: BOGOTA_TIMEZONE, day: '2-digit', month: 'short' })}
+                  </strong>
                 </header>
                 <div className="teacher-calendar-events">
                   {dayClasses.length ? dayClasses.map((item) => (

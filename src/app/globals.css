@@ -829,6 +829,19 @@ h3 {
   font-size: 0.86rem;
 }
 
+.week-today-button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(234, 84, 52, 0.24);
+  border-radius: 999px;
+  background: rgba(234, 84, 52, 0.1);
+  color: var(--brand);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .week-nav-button {
   display: inline-grid;
   width: 34px;
@@ -894,6 +907,10 @@ h3 {
   background: linear-gradient(180deg, rgba(242, 245, 248, 0.72), rgba(255, 255, 255, 0.92) 130px);
 }
 
+.teacher-calendar-day.is-today {
+  background: linear-gradient(180deg, rgba(234, 84, 52, 0.11), rgba(255, 255, 255, 0.95) 150px);
+}
+
 .teacher-calendar-day:last-child {
   border-right: 0;
 }
@@ -918,6 +935,10 @@ h3 {
 .teacher-calendar-day header strong {
   color: var(--secondary);
   font-size: 0.92rem;
+}
+
+.teacher-calendar-day.is-today header strong {
+  color: var(--brand);
 }
 
 .teacher-calendar-events {
