@@ -909,6 +909,101 @@ h3 {
   text-align: center;
 }
 
+.student-booking-slots,
+.student-booking-list {
+  display: grid;
+  gap: 18px;
+}
+
+.student-booking-day {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fff, rgba(242, 245, 248, 0.7));
+}
+
+.student-booking-day .card-header {
+  margin-bottom: 14px;
+}
+
+.student-booking-calendar-board {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(178px, 1fr));
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.student-booking-calendar-day {
+  min-height: 330px;
+  padding: 12px;
+  border-right: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(242, 245, 248, 0.72), rgba(255, 255, 255, 0.92) 130px);
+}
+
+.student-booking-calendar-day:last-child {
+  border-right: 0;
+}
+
+.student-booking-calendar-day header {
+  display: grid;
+  gap: 3px;
+  min-height: 62px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.student-booking-calendar-day header p {
+  margin: 0;
+  color: var(--brand);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.student-booking-calendar-day header strong {
+  color: var(--secondary);
+  font-size: 0.92rem;
+}
+
+.student-booking-calendar-events {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.student-booking-slot {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--brand);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.student-booking-slot:hover,
+.student-booking-slot:focus-visible {
+  border-color: var(--brand);
+  background: #fff6f2;
+  outline: none;
+}
+
+.student-booking-calendar-empty {
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
 .class-detail-panel {
   padding: 24px;
 }

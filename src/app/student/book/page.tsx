@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/auth'
-import { bookSlotAction } from '@/lib/actions/booking'
 import { formatPackageProgress, getPackageProgress, listBookableSlotsForStudent } from '@/lib/booking'
+import { StudentBookingSlots } from '@/components/student-booking-slots'
 
 export default async function StudentBookingPage() {
   const session = await getSession()
@@ -10,17 +10,6 @@ export default async function StudentBookingPage() {
 
   const { context, slots } = await listBookableSlotsForStudent(session.userId)
   if (!context) return <p>No encontramos profesor asignado o paquete activo para esta cuenta.</p>
-
-  const groupedSlots = slots.reduce<Record<string, typeof slots>>((acc, slot) => {
-    const dateKey = new Date(slot.startsAtIso).toLocaleDateString('es-CO', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    })
-    acc[dateKey] ||= []
-    acc[dateKey].push(slot)
-    return acc
-  }, {})
 
   const packageProgress = getPackageProgress(
     context.package.totalMinutes,
@@ -49,37 +38,7 @@ export default async function StudentBookingPage() {
             <span className="status-pill">Profesor asignado: {context.teacher.userName}</span>
             <span className="status-pill">Estado actual: {formatPackageProgress(context.package.totalMinutes, context.package.usedMinutes, context.package.reservedMinutes)}</span>
           </div>
-          {slots.length ? (
-            Object.entries(groupedSlots).map(([day, daySlots]) => (
-              <div key={day} className="panel">
-                <div className="card-header">
-                  <p className="eyebrow">Disponibilidad</p>
-                  <h3>{day}</h3>
-                </div>
-                <div className="toolbar">
-                  {daySlots.map((slot) => (
-                    <form key={slot.token} action={bookSlotAction}>
-                      <input type="hidden" name="slotToken" value={slot.token} />
-                      <button type="submit" className="button-ghost">
-                        {new Date(slot.startsAtIso).toLocaleTimeString('es-CO', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                        {' · '}
-                        {slot.classType === 'ONE_ON_ONE' ? '1:1' : `Grupal (${slot.availableSeats})`}
-                        {' · '}
-                        {slot.durationMinutes} min
-                      </button>
-                    </form>
-                  ))}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="empty-state">
-              No hay slots reservables con la configuración actual. Revisa saldo, aviso mínimo o bloques de disponibilidad.
-            </div>
-          )}
+          <StudentBookingSlots slots={slots} />
         </div>
       </section>
     </div>
