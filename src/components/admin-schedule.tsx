@@ -33,19 +33,6 @@ function getWeekDays(weekStart: string) {
   })
 }
 
-function moveWeek(weekStart: string, amount: number) {
-  const [year, month, day] = weekStart.split('-').map(Number)
-  const next = new Date(Date.UTC(year, month - 1, day))
-  next.setUTCDate(next.getUTCDate() + amount * 7)
-  return next.toISOString().slice(0, 10)
-}
-
-function todayValue() {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: BOGOTA_TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date())
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
-  return `${values.year}-${values.month}-${values.day}`
-}
-
 function formatWeekRange(days: Date[]) {
   const formatter = new Intl.DateTimeFormat('es-CO', { timeZone: BOGOTA_TIMEZONE, day: 'numeric', month: 'short' })
   return `${formatter.format(days[0])} - ${formatter.format(days[6])}`
@@ -66,7 +53,7 @@ function formatDateTime(value: string) {
   })
 }
 
-export function AdminSchedule({ classes, weekStart, initialView }: { classes: OperationalClass[]; weekStart: string; initialView: View }) {
+export function AdminSchedule({ classes, weekStart, initialView, previousHref, nextHref, todayHref }: { classes: OperationalClass[]; weekStart: string; initialView: View; previousHref: string; nextHref: string; todayHref: string }) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -96,10 +83,10 @@ export function AdminSchedule({ classes, weekStart, initialView }: { classes: Op
         </div>
         <div className="teacher-schedule-controls">
           <div className="week-navigator" aria-label="Navegación semanal">
-            <button type="button" className="week-nav-button" aria-label="Semana anterior" title="Semana anterior" onClick={() => navigate(moveWeek(weekStart, -1))}>←</button>
+            <Link href={previousHref} className="week-nav-button" aria-label="Semana anterior" title="Semana anterior">←</Link>
             <strong>{formatWeekRange(weekDays)}</strong>
-            <button type="button" className="week-nav-button" aria-label="Semana siguiente" title="Semana siguiente" onClick={() => navigate(moveWeek(weekStart, 1))}>→</button>
-            <button type="button" className="week-today-button" onClick={() => navigate(todayValue())}>Volver a hoy</button>
+            <Link href={nextHref} className="week-nav-button" aria-label="Semana siguiente" title="Semana siguiente">→</Link>
+            <Link href={todayHref} className="week-today-button">Volver a hoy</Link>
           </div>
           <div className="schedule-view-toggle" aria-label="Vista de agenda">
             <button type="button" className={view === 'list' ? 'is-active' : ''} onClick={() => changeView('list')}>Lista</button>

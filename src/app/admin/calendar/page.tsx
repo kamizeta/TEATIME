@@ -28,6 +28,19 @@ function toDateInputValue(date: Date) {
   return `${year}-${month}-${day}`
 }
 
+function shiftWeek(date: Date, amount: number) {
+  const copy = new Date(date)
+  copy.setDate(copy.getDate() + amount * 7)
+  return copy
+}
+
+function calendarHref(week: string, view: string, teacher: string, status: string) {
+  const params = new URLSearchParams({ week, view })
+  if (teacher) params.set('teacher', teacher)
+  if (status) params.set('status', status)
+  return `/admin/calendar?${params.toString()}`
+}
+
 export default async function AdminCalendarPage({
   searchParams,
 }: {
@@ -66,6 +79,9 @@ export default async function AdminCalendarPage({
     completed: events.filter((event) => event.status === 'COMPLETED').length,
   }
   const weekValue = toDateInputValue(weekStart)
+  const previousHref = calendarHref(toDateInputValue(shiftWeek(weekStart, -1)), view, teacherFilter, statusFilter)
+  const nextHref = calendarHref(toDateInputValue(shiftWeek(weekStart, 1)), view, teacherFilter, statusFilter)
+  const todayHref = calendarHref(toDateInputValue(new Date()), view, teacherFilter, statusFilter)
 
   return (
     <div className="page-stack">
@@ -116,6 +132,9 @@ export default async function AdminCalendarPage({
       <AdminSchedule
         weekStart={weekValue}
         initialView={view}
+        previousHref={previousHref}
+        nextHref={nextHref}
+        todayHref={todayHref}
         classes={events.map((event) => ({
           id: event.id,
           title: event.title,
