@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { ActionIconButton } from '@/components/action-icon-button'
 
 type AttendanceRow = {
   studentId: string
@@ -56,7 +57,7 @@ export default function AttendanceClient({
           <tr>
             <th>Alumno</th>
             <th>Estado</th>
-            <th>Guardar</th>
+            <th>Acción</th>
           </tr>
         </thead>
         <tbody>
@@ -81,14 +82,14 @@ export default function AttendanceClient({
                 </select>
               </td>
               <td>
-                <button
+                <ActionIconButton
                   type="button"
-                  className={statusByStudent[row.studentId] !== initialStatusByStudent[row.studentId] ? 'button-primary' : 'button-ghost'}
                   onClick={() => saveRow(row.studentId)}
                   disabled={isPending || statusByStudent[row.studentId] === initialStatusByStudent[row.studentId]}
-                >
-                  Guardar
-                </button>
+                  icon="save"
+                  label="Guardar asistencia"
+                  tone={statusByStudent[row.studentId] !== initialStatusByStudent[row.studentId] ? 'primary' : 'default'}
+                />
               </td>
             </tr>
           ))}

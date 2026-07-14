@@ -1654,3 +1654,121 @@ h3 {
     padding: 10px 12px;
   }
 }
+
+
+/* Compact action system for dense operational tables. Native titles remain
+   intentionally available because table overflow would clip custom tooltips. */
+.icon-action-button {
+  display: inline-flex;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(62, 91, 116, 0.08);
+  color: var(--secondary);
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease, color 160ms ease;
+}
+
+.icon-action-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.icon-action-button:hover:not(:disabled),
+.icon-action-button:focus-visible {
+  transform: translateY(-1px);
+  background: rgba(62, 91, 116, 0.16);
+  box-shadow: 0 7px 15px rgba(26, 42, 63, 0.12);
+  outline: none;
+}
+
+.icon-action-button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(234, 84, 52, 0.24);
+}
+
+.icon-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.icon-action-primary {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+.icon-action-primary:hover:not(:disabled),
+.icon-action-primary:focus-visible {
+  background: #d94728;
+}
+
+.icon-action-danger {
+  border-color: rgba(194, 66, 48, 0.22);
+  background: rgba(194, 66, 48, 0.1);
+  color: #ba4938;
+}
+
+.icon-action-danger:hover:not(:disabled),
+.icon-action-danger:focus-visible {
+  background: rgba(194, 66, 48, 0.18);
+}
+
+.action-icon-group,
+.access-actions {
+  display: flex;
+  position: relative;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.user-directory-table {
+  min-width: 1500px;
+}
+
+.user-directory-table th:nth-child(1) { width: 16%; }
+.user-directory-table th:nth-child(2) { width: 7%; }
+.user-directory-table th:nth-child(3) { width: 17%; }
+.user-directory-table th:nth-child(4) { width: 13%; }
+.user-directory-table th:nth-child(5) { width: 7%; }
+.user-directory-table th:nth-child(6) { width: 20%; }
+.user-directory-table th:nth-child(7) { width: 20%; }
+
+.access-action-notice {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 4;
+  width: 260px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--secondary);
+  line-height: 1.35;
+  white-space: normal;
+  box-shadow: 0 10px 24px rgba(26, 42, 63, 0.14);
+}
+
+.teacher-directory-table {
+  min-width: 1720px;
+}
+
+.teacher-directory-table th:nth-child(1) { width: 14%; }
+.teacher-directory-table th:nth-child(2) { width: 17%; }
+.teacher-directory-table th:nth-child(3) { width: 13%; }
+.teacher-directory-table th:nth-child(4) { width: 8%; }
+.teacher-directory-table th:nth-child(5) { width: 12%; }
+.teacher-directory-table th:nth-child(6) { width: 7%; }
+.teacher-directory-table th:nth-child(7) { width: 13%; }
+.teacher-directory-table th:nth-child(8) { width: 16%; }
+
+.teacher-directory-actions .action-icon-group {
+  position: relative;
+}

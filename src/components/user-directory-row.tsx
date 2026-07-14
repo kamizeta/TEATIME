@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { updateStaffPermissionAction, updateUserAction } from '@/lib/actions'
 import { UserAccessActions } from '@/components/user-access-actions'
+import { ActionIconButton } from '@/components/action-icon-button'
 
 type StaffPermission = {
   canManageUsers?: boolean
@@ -142,14 +143,14 @@ export function UserDirectoryRow({ user, roleLabel }: UserDirectoryRowProps) {
         ) : <span className="block-muted">No aplica</span>}
       </td>
       <td className="user-directory-action">
-        <button
+        <ActionIconButton
           form={userFormId}
           type="submit"
           disabled={!hasUserChanges}
-          className={`compact-button ${hasUserChanges ? 'button-primary' : 'button-ghost'}`}
-        >
-          Guardar
-        </button>
+          icon="save"
+          label="Guardar cambios de usuario"
+          tone={hasUserChanges ? 'primary' : 'default'}
+        />
         <UserAccessActions userId={user.id} role={user.role} />
       </td>
     </tr>

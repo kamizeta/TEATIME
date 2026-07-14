@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ActionIconButton } from '@/components/action-icon-button'
 
 type AccessAction = 'invite' | 'copy' | 'reset' | 'temporary'
 
@@ -40,12 +41,12 @@ export function UserAccessActions({ userId, role }: { userId: string; role: stri
   }
 
   return (
-    <div className="access-actions">
-      <button type="button" className="button-ghost compact-button" disabled={loading !== null} onClick={() => run('invite')}>{loading === 'invite' ? 'Enviando...' : 'Enviar invitación'}</button>
-      <button type="button" className="button-ghost compact-button" disabled={loading !== null} onClick={() => run('copy')}>{loading === 'copy' ? 'Copiando...' : 'Copiar enlace'}</button>
-      <button type="button" className="button-ghost compact-button" disabled={loading !== null} onClick={() => run('reset')}>{loading === 'reset' ? 'Generando...' : 'Restablecer acceso'}</button>
-      <button type="button" className="button-ghost compact-button" disabled={loading !== null} onClick={() => run('temporary')}>{loading === 'temporary' ? 'Generando...' : 'Clave temporal'}</button>
-      {notice ? <small className="access-action-notice">{notice}</small> : null}
+    <div className="access-actions" aria-label="Acciones de acceso">
+      <ActionIconButton type="button" icon="invite" label={loading === 'invite' ? 'Enviando invitación...' : 'Enviar invitación por correo'} disabled={loading !== null} onClick={() => run('invite')} />
+      <ActionIconButton type="button" icon="copy" label={loading === 'copy' ? 'Copiando enlace...' : 'Copiar enlace para WhatsApp'} disabled={loading !== null} onClick={() => run('copy')} />
+      <ActionIconButton type="button" icon="reset" label={loading === 'reset' ? 'Generando restablecimiento...' : 'Restablecer acceso'} disabled={loading !== null} onClick={() => run('reset')} />
+      <ActionIconButton type="button" icon="key" label={loading === 'temporary' ? 'Generando clave...' : 'Generar contraseña temporal'} tone="danger" disabled={loading !== null} onClick={() => run('temporary')} />
+      {notice ? <small className="access-action-notice" aria-live="polite">{notice}</small> : null}
     </div>
   )
 }

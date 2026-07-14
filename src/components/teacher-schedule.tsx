@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { submitCancellationAction } from '@/lib/actions'
+import { ActionIconButton, ActionIconExternalLink, ActionIconLink } from '@/components/action-icon-button'
 
 type ScheduledClass = {
   id: string
@@ -98,7 +99,7 @@ function CancellationAction({ classId }: { classId: string }) {
       <input type="hidden" name="scope" value="CLASS" />
       <input type="hidden" name="redirectPath" value="/teacher/today" />
       <input type="hidden" name="reason" value="Clase cancelada por el profesor desde su agenda operativa." />
-      <button type="submit" className="button-ghost compact-button">Cancelar</button>
+      <ActionIconButton type="submit" icon="cancel" tone="danger" label="Cancelar clase" />
     </form>
   )
 }
@@ -153,9 +154,9 @@ export function TeacherSchedule({ classes }: { classes: ScheduledClass[] }) {
                   <td>{item.students.join(', ') || 'Sin alumnos'}</td>
                   <td><span className="status-pill">{statusLabels[item.status] || item.status}</span></td>
                   <td>
-                    <div className="inline-actions teacher-class-actions">
-                      <Link href={`/teacher/classes/${item.id}`} className="button-link compact-button">Ver detalle</Link>
-                      {item.meetUrl ? <a href={item.meetUrl} target="_blank" rel="noreferrer" className="button-ghost compact-button">Entrar a Meet</a> : null}
+                    <div className="action-icon-group teacher-class-actions">
+                      <ActionIconLink href={`/teacher/classes/${item.id}`} icon="detail" label="Ver detalle de la clase" tone="primary" />
+                      {item.meetUrl ? <ActionIconExternalLink href={item.meetUrl} icon="meet" label="Abrir Google Meet" /> : null}
                       {item.status === 'CANCELED' || item.status === 'COMPLETED' ? null : <CancellationAction classId={item.id} />}
                     </div>
                   </td>

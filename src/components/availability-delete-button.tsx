@@ -1,6 +1,7 @@
 'use client'
 
 import { deactivateAvailabilityBlockAction } from '@/lib/actions/booking'
+import { ActionIconButton } from '@/components/action-icon-button'
 
 type AvailabilityDeleteButtonProps = {
   blockId: string
@@ -21,7 +22,7 @@ export function AvailabilityDeleteButton({ blockId, redirectPath }: Availability
     >
       <input type="hidden" name="blockId" value={blockId} />
       <input type="hidden" name="redirectPath" value={redirectPath} />
-      <button className="button-ghost compact-button" type="submit">Eliminar</button>
+      <ActionIconButton type="submit" icon="delete" tone="danger" label="Eliminar disponibilidad" />
     </form>
   )
 }

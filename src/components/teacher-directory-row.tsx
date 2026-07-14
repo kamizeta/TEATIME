@@ -1,9 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
 import { updateUserAction } from '@/lib/actions'
 import { UserAccessActions } from '@/components/user-access-actions'
+import { ActionIconButton, ActionIconLink } from '@/components/action-icon-button'
 
 type TeacherDirectoryRowProps = {
   teacher: {
@@ -117,18 +117,18 @@ export function TeacherDirectoryRow({ teacher }: TeacherDirectoryRowProps) {
         )}
       </td>
       <td className="teacher-directory-actions">
-        <Link href={`/admin/teachers/${teacher.id}`} className="button-link compact-button">
-          Ver detalle
-        </Link>
-        <button
-          form={formId}
-          type="submit"
-          disabled={!hasChanges}
-          className={`compact-button ${hasChanges ? 'button-primary' : 'button-ghost'}`}
-        >
-          Guardar
-        </button>
-        <UserAccessActions userId={teacher.userId} role="TEACHER" />
+        <div className="action-icon-group">
+          <ActionIconLink href={`/admin/teachers/${teacher.id}`} icon="detail" label="Ver detalle del profesor" tone="primary" />
+          <ActionIconButton
+            form={formId}
+            type="submit"
+            disabled={!hasChanges}
+            icon="save"
+            label="Guardar cambios del profesor"
+            tone={hasChanges ? 'primary' : 'default'}
+          />
+          <UserAccessActions userId={teacher.userId} role="TEACHER" />
+        </div>
       </td>
     </tr>
   )
