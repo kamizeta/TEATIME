@@ -16,8 +16,9 @@ function getPackageErrorMessage(code?: string) {
 export default async function AdminPackages({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const params = searchParams ? await searchParams : {}
   const rows = await prisma.hourPackage.findMany({
     include: {
       student: {
@@ -97,7 +98,7 @@ export default async function AdminPackages({
       const after = item.after ? JSON.parse(item.after) : {}
       return {
         key: item.id,
-        student: 'Ajuste manual',
+        student: rows.find((pack) => pack.id === item.entityId)?.student.user.name || 'Paquete no encontrado',
         packageId: item.entityId,
         type: 'Ajuste',
         minutes: Number(after.deltaMinutes || 0),
@@ -117,9 +118,9 @@ export default async function AdminPackages({
         </p>
       </section>
 
-      {searchParams?.package === 'adjusted' ? <p className="status-success">Paquete ajustado y ledger actualizado.</p> : null}
-      {searchParams?.package === 'error' ? (
-        <p className="status-warning">{getPackageErrorMessage(typeof searchParams?.code === 'string' ? searchParams.code : '')}</p>
+      {params.package === 'adjusted' ? <p className="status-success">Paquete ajustado y ledger actualizado.</p> : null}
+      {params.package === 'error' ? (
+        <p className="status-warning">{getPackageErrorMessage(typeof params.code === 'string' ? params.code : '')}</p>
       ) : null}
 
       <section className="panel">
