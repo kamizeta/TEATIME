@@ -22,7 +22,7 @@ export async function GET(req: Request) {
     cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE)
 
     if (error) {
-      return NextResponse.redirect(new URL(`/admin/settings?google_error=${encodeURIComponent(error)}`, baseUrl))
+      return NextResponse.redirect(new URL('/admin/settings?google_error=authorization_denied', baseUrl))
     }
 
     if (!code) {
@@ -31,9 +31,7 @@ export async function GET(req: Request) {
 
     await completeGoogleCalendarConnection(code)
     return NextResponse.redirect(new URL('/admin/settings?google=connected', baseUrl))
-  } catch (error: any) {
-    return NextResponse.redirect(
-      new URL(`/admin/settings?google_error=${encodeURIComponent(error.message || 'callback_failed')}`, baseUrl)
-    )
+  } catch {
+    return NextResponse.redirect(new URL('/admin/settings?google_error=callback_failed', baseUrl))
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireRole } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,11 @@ function hasEncryptionKey() {
 }
 
 export async function GET() {
+  try {
+    await requireRole(['ADMIN'])
+  } catch {
+    return NextResponse.json({ ok: false, error: 'No autorizado.' }, { status: 401 })
+  }
   const checks = []
 
   try {

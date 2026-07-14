@@ -2,6 +2,7 @@
 const isProduction = process.env.NODE_ENV === 'production'
 
 const nextConfig = {
+  poweredByHeader: false,
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb'
@@ -18,6 +19,7 @@ const nextConfig = {
         key: 'Content-Security-Policy',
         value: [
           "default-src 'self'",
+          "object-src 'none'",
           `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
@@ -26,6 +28,8 @@ const nextConfig = {
           "frame-ancestors 'none'",
           "base-uri 'self'",
           "form-action 'self'",
+          'upgrade-insecure-requests',
+          'block-all-mixed-content',
         ].join('; '),
       },
     ]

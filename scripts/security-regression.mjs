@@ -30,6 +30,7 @@ async function main() {
     { path: '/api/classes', method: 'GET', expectedStatus: 401 },
     { path: '/api/reports/attendance/export', method: 'GET', expectedStatus: 401 },
     { path: '/api/reports/packages/export', method: 'GET', expectedStatus: 401 },
+    { path: '/api/readiness', method: 'GET', expectedStatus: 401 },
     { path: '/api/jobs/meet-sync', method: 'POST', expectedStatus: 403 },
   ]
   for (const item of protectedPaths) {

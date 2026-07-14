@@ -36,7 +36,12 @@ export async function PATCH(req: Request) {
     })
 
     return NextResponse.json({ ok: true, bookingRule: savedRule })
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e.message }, { status: 500 })
+  } catch (error) {
+    const invalidInput = error instanceof z.ZodError
+    const unauthorized = error instanceof Error && error.message === 'UNAUTHORIZED'
+    return NextResponse.json(
+      { ok: false, error: invalidInput ? 'Los ajustes no son válidos.' : unauthorized ? 'No autorizado.' : 'No fue posible guardar los ajustes.' },
+      { status: invalidInput ? 400 : unauthorized ? 401 : 500 }
+    )
   }
 }

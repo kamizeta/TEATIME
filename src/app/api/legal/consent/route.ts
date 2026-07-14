@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { getSession } from '@/lib/auth'
+import { getTrustedClientIp } from '@/lib/client-ip'
 import { recordPortalAccessConsents } from '@/lib/legal-consent'
 
 export async function POST(request: Request) {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
   await recordPortalAccessConsents({
     userId: session.userId,
     transcriptionAccepted: body.transcriptionAccepted === true,
-    ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '',
+    ip: getTrustedClientIp(request.headers),
     userAgent: request.headers.get('user-agent') || '',
   })
   return NextResponse.json({ ok: true, message: 'Tu consentimiento fue actualizado.' })

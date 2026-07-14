@@ -36,8 +36,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     return NextResponse.json({ ok: true, allowed: true, alreadyCanceled: result.alreadyCanceled, overrideUsed: result.overrideUsed })
-  } catch (e: any) {
-    const status = e.message === 'CLASS_NOT_FOUND' ? 404 : e.message === 'UNAUTHORIZED' ? 401 : 500
-    return NextResponse.json({ ok: false, error: e.message }, { status })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ ok: false, error: 'Indica un motivo de al menos 3 caracteres.' }, { status: 400 })
+    }
+    const code = error instanceof Error ? error.message : ''
+    const status = code === 'CLASS_NOT_FOUND' ? 404 : code === 'UNAUTHORIZED' ? 401 : 500
+    const message = code === 'CLASS_NOT_FOUND'
+      ? 'Clase no encontrada.'
+      : code === 'UNAUTHORIZED'
+        ? 'No autorizado.'
+        : 'No fue posible cancelar la clase.'
+    return NextResponse.json({ ok: false, error: message }, { status })
   }
 }

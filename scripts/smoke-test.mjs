@@ -16,7 +16,7 @@ const routes = [
   '/admin/reports',
 ]
 
-const advisoryRoutes = ['/api/readiness']
+const protectedApiRoutes = ['/api/readiness']
 
 function cookieHeaderFrom(response) {
   const setCookie = response.headers.get('set-cookie')
@@ -55,10 +55,12 @@ async function main() {
     if (!ok) failures.push(`${route} -> ${response.status}`)
   }
 
-  for (const route of advisoryRoutes) {
-    const response = await fetch(`${baseUrl}${route}`)
+  for (const route of protectedApiRoutes) {
+    const response = await fetch(`${baseUrl}${route}`, { headers: { cookie } })
     const body = await response.json().catch(() => ({}))
-    console.log(`ADVISORY ${response.status} ${route} ok=${Boolean(body.ok)}`)
+    const ok = response.status >= 200 && response.status < 400 && body.ok === true
+    console.log(`${ok ? 'OK' : 'FAIL'} ${response.status} ${route} ok=${Boolean(body.ok)}`)
+    if (!ok) failures.push(`${route} -> ${response.status}`)
   }
 
   if (failures.length) {

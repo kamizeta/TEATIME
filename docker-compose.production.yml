@@ -17,6 +17,12 @@ services:
   app:
     build: .
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:mode=1777,size=64m
     env_file:
       - .env
     environment:
@@ -39,6 +45,12 @@ services:
   meet-sync-scheduler:
     build: .
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:mode=1777,size=64m
     env_file:
       - .env
     environment:

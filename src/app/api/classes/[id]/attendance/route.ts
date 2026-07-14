@@ -41,7 +41,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     })
 
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e.message }, { status: e.message === 'UNAUTHORIZED' ? 401 : 500 })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ ok: false, error: 'Los datos de asistencia no son válidos.' }, { status: 400 })
+    }
+    const unauthorized = error instanceof Error && error.message === 'UNAUTHORIZED'
+    return NextResponse.json({ ok: false, error: unauthorized ? 'No autorizado.' : 'No fue posible registrar la asistencia.' }, { status: unauthorized ? 401 : 500 })
   }
 }

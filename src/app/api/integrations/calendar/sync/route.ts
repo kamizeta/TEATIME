@@ -6,15 +6,15 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 
 const Item = z.object({
-  id: z.string(),
-  summary: z.string(),
-  start: z.string(),
-  end: z.string(),
-  meetLink: z.string().optional(),
+  id: z.string().min(1).max(255),
+  summary: z.string().min(1).max(500),
+  start: z.string().datetime({ offset: true }),
+  end: z.string().datetime({ offset: true }),
+  meetLink: z.string().url().max(2_000).optional(),
   teacherEmail: z.string().email(),
 })
 
-const Payload = z.object({ events: z.array(Item) })
+const Payload = z.object({ events: z.array(Item).max(200) })
 
 export async function POST(req: Request) {
   try {
@@ -54,7 +54,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e.message }, { status: 500 })
+  } catch (error) {
+    const invalidInput = error instanceof z.ZodError
+    return NextResponse.json(
+      { ok: false, error: invalidInput ? 'Los datos de sincronización no son válidos.' : 'No fue posible sincronizar el calendario.' },
+      { status: invalidInput ? 400 : 500 }
+    )
   }
 }

@@ -29,9 +29,12 @@ export async function POST(request: Request) {
     })
     return NextResponse.json(result)
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'No se pudo gestionar el acceso.' },
-      { status: 400 }
-    )
+    const code = error instanceof Error ? error.message : ''
+    const knownErrors: Record<string, string> = {
+      USER_NOT_FOUND: 'La persona no existe.',
+      USER_NOT_ELIGIBLE: 'Solo se puede gestionar acceso de alumnos o profesores.',
+      UNAUTHORIZED: 'No autorizado.',
+    }
+    return NextResponse.json({ error: knownErrors[code] || 'No se pudo gestionar el acceso.' }, { status: code === 'UNAUTHORIZED' ? 401 : 400 })
   }
 }
