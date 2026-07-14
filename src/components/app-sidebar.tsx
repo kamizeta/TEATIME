@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { AppRole } from '@/lib/navigation'
 import { roleLabels } from '@/lib/display-labels'
+import { getLearningGuideKeyForRole, getLearningGuidePath } from '@/lib/learning'
 
 type NavItem = {
   href: string
@@ -15,7 +16,7 @@ export function AppSidebar({ nav, role }: { nav: NavItem[]; role: AppRole }) {
   const pathname = usePathname()
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" data-tour="sidebar">
       <div className="sidebar-heading">
         <span>Menú principal</span>
         <strong>{roleLabels[role]}</strong>
@@ -36,6 +37,10 @@ export function AppSidebar({ nav, role }: { nav: NavItem[]; role: AppRole }) {
           )
         })}
       </nav>
+      <Link href={getLearningGuidePath(getLearningGuideKeyForRole(role))} className={pathname.startsWith('/ayuda/') ? 'sidebar-link sidebar-help sidebar-link-active' : 'sidebar-link sidebar-help'}>
+        <span>? Ayuda y aprendizaje</span>
+        <small>Guías, recorridos y progreso</small>
+      </Link>
     </aside>
   )
 }

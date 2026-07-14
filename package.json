@@ -15,7 +15,8 @@
     "test:security": "node scripts/security-regression.mjs",
     "backup:json": "node scripts/backup-export.mjs",
     "backup:pg": "node scripts/backup-pg-dump.mjs",
-    "test:domain": "node scripts/run-domain-regression.mjs"
+    "test:domain": "node scripts/run-domain-regression.mjs",
+    "test:learning": "node scripts/learning-center-regression.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.17.0",

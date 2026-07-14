@@ -182,6 +182,7 @@ model User {
   messageTemplates      MessageTemplate[]          @relation("MessageTemplateUpdatedBy")
   accessTokens          AccessToken[]
   legalConsents         LegalConsent[]
+  learningProgresses     LearningProgress[]
 }
 
 model AccessToken {
@@ -655,4 +656,21 @@ model AuditLog {
   createdAt  DateTime @default(now())
 
   actor User @relation(fields: [actorId], references: [id], onDelete: Cascade)
+}
+
+model LearningProgress {
+  id             String   @id @default(cuid())
+  userId         String
+  guideKey       String
+  lessonKey      String
+  contentVersion String
+  completedAt    DateTime?
+  dismissedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, guideKey, lessonKey])
+  @@index([userId, guideKey, completedAt])
 }

@@ -120,7 +120,7 @@ export default async function AdminDashboard({
             ? 'Vista global para dirección y operación académica.'
             : 'Vista del equipo operativo para primeras reservas, incidencias y seguimiento diario.'}
         </p>
-        <div className="toolbar">
+        <div className="toolbar" data-tour="page-actions">
           <Link href="/admin/calendar" className="button-primary">Ver calendario</Link>
           <Link href="/admin/weekly-closing" className="button-ghost">Cierre semanal</Link>
           <Link href="/admin/incidents" className="button-ghost">Incidencias</Link>

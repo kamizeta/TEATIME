@@ -1772,3 +1772,328 @@ h3 {
 .teacher-directory-actions .action-icon-group {
   position: relative;
 }
+
+.button-help {
+  white-space: nowrap;
+}
+
+.sidebar-help {
+  margin-top: 14px;
+  border: 1px dashed rgba(62, 91, 116, 0.28);
+  background: rgba(110, 193, 228, 0.08);
+}
+
+.learning-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 16px;
+  padding: 20px 24px;
+  border: 1px solid rgba(234, 84, 52, 0.22);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(234, 84, 52, 0.1), rgba(110, 193, 228, 0.12));
+  box-shadow: var(--shadow);
+}
+
+.learning-welcome h2,
+.learning-progress-card h2,
+.learning-first-steps h2,
+.learning-faq h2,
+.learning-guide-footer h2 {
+  margin: 0 0 6px;
+}
+
+.learning-welcome p,
+.learning-progress-card p,
+.learning-guide-footer p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.learning-welcome-actions,
+.learning-guide-actions,
+.learning-lesson-actions,
+.learning-tour-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.learning-guide-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.learning-guide-actions {
+  flex: 0 0 auto;
+}
+
+.learning-progress-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 280px) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.learning-progress-meter {
+  position: relative;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.learning-progress-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand), #f58b5a);
+  transition: width 180ms ease;
+}
+
+.learning-progress-meter strong {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--secondary);
+  font-size: 0.7rem;
+}
+
+.learning-first-steps ol,
+.learning-lesson ol {
+  margin: 14px 0 0;
+  padding-left: 22px;
+}
+
+.learning-first-steps li,
+.learning-lesson li {
+  margin: 8px 0;
+  color: var(--secondary);
+}
+
+.learning-lesson-list {
+  display: grid;
+  gap: 14px;
+}
+
+.learning-lesson {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.learning-lesson-complete {
+  border-color: rgba(33, 140, 92, 0.32);
+  background: linear-gradient(135deg, rgba(97, 206, 112, 0.08), var(--surface));
+}
+
+.learning-lesson-number {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(234, 84, 52, 0.12);
+  color: var(--brand);
+  font-family: Montserrat, sans-serif;
+  font-weight: 700;
+}
+
+.learning-lesson-complete .learning-lesson-number {
+  background: rgba(33, 140, 92, 0.14);
+  color: var(--success);
+}
+
+.learning-lesson-content h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.learning-lesson-content p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.learning-lesson-actions {
+  justify-content: flex-end;
+  min-width: 166px;
+}
+
+.learning-faq details {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.learning-faq details:last-child {
+  border-bottom: 0;
+}
+
+.learning-faq summary {
+  cursor: pointer;
+  font-family: Montserrat, sans-serif;
+  font-weight: 600;
+}
+
+.learning-faq p {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
+.learning-guide-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.learning-tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.learning-tour-spotlight {
+  position: fixed;
+  z-index: 101;
+  border: 2px solid var(--brand);
+  border-radius: 16px;
+  box-shadow: 0 0 0 9999px rgba(24, 35, 48, 0.58), 0 0 0 6px rgba(234, 84, 52, 0.18);
+  pointer-events: none;
+  transition: all 160ms ease;
+}
+
+.learning-tour-card {
+  position: fixed;
+  right: clamp(18px, 4vw, 56px);
+  bottom: clamp(18px, 4vw, 48px);
+  z-index: 102;
+  width: min(420px, calc(100vw - 36px));
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  outline: none;
+  background: var(--surface);
+  box-shadow: 0 18px 56px rgba(16, 24, 40, 0.28);
+  pointer-events: auto;
+}
+
+.learning-tour-card h2 {
+  margin: 0 0 8px;
+}
+
+.learning-tour-card p:not(.eyebrow) {
+  margin: 0;
+  color: var(--muted);
+}
+
+.learning-tour-actions {
+  margin-top: 20px;
+}
+
+.learning-tour-spacer {
+  flex: 1;
+}
+
+@media (max-width: 900px) {
+  .learning-welcome,
+  .learning-guide-hero,
+  .learning-guide-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .learning-progress-card {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-lesson {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .learning-lesson-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 680px) {
+  .button-help {
+    font-size: 0;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+  }
+
+  .button-help::after {
+    content: '?';
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .learning-welcome {
+    padding: 18px;
+  }
+
+  .learning-welcome-actions,
+  .learning-guide-actions,
+  .learning-lesson-actions {
+    width: 100%;
+  }
+
+  .learning-welcome-actions > *,
+  .learning-guide-actions > *,
+  .learning-lesson-actions > * {
+    flex: 1 1 auto;
+  }
+
+  .learning-tour-card {
+    right: 18px;
+    left: 18px;
+    width: auto;
+  }
+}
+
+@media print {
+  .topbar,
+  .sidebar,
+  .learning-welcome,
+  .learning-guide-actions,
+  .learning-progress-card form,
+  .learning-lesson-actions,
+  .learning-guide-footer a {
+    display: none !important;
+  }
+
+  .app-frame {
+    padding: 0;
+  }
+
+  .shell-grid {
+    display: block;
+  }
+
+  .hero,
+  .panel,
+  .learning-progress-card,
+  .learning-lesson {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+}

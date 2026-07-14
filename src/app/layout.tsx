@@ -2,9 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { AppSidebar } from '@/components/app-sidebar'
+import { LearningTour } from '@/components/learning-tour'
+import { LearningWelcomeCard } from '@/components/learning-welcome-card'
 import { getSession } from '@/lib/auth'
 import { logoutAction } from '@/lib/actions/session'
 import { getDefaultRouteForRole, getNavigationForRole } from '@/lib/navigation'
+import { getLearningGuideKeyForRole, getLearningGuidePath, learningGuides } from '@/lib/learning'
 import { prisma } from '@/lib/prisma'
 import { roleLabels } from '@/lib/display-labels'
 import './globals.css'
@@ -23,6 +26,12 @@ async function submitLogout() {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
   const nav = session ? getNavigationForRole(session.role) : []
+  const learningGuideKey = session ? getLearningGuideKeyForRole(session.role) : null
+  const learningProgress = session && learningGuideKey
+    ? await prisma.learningProgress.findUnique({
+        where: { userId_guideKey_lessonKey: { userId: session.userId, guideKey: learningGuideKey, lessonKey: '__welcome__' } },
+      })
+    : null
   const signedInProfile =
     session?.role === 'TEACHER' || session?.role === 'STUDENT'
       ? await prisma.user.findUnique({
@@ -51,6 +60,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     <span>{signedInProfile.email}</span>
                   </div>
                 ) : null}
+                <Link href={getLearningGuidePath(learningGuideKey!)} className="button-ghost button-help" data-tour="topbar-help">
+                  ? Ayuda y aprendizaje
+                </Link>
                 <span className="role-pill">{roleLabels[session.role] || session.role}</span>
                 <form action={submitLogout}>
                   <button type="submit" className="button-ghost">
@@ -66,9 +78,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <AppSidebar nav={nav} role={session.role} />
             ) : null}
 
-            <main className="content">{children}</main>
+            <main className="content" data-tour="page-content">
+              {session && learningGuideKey && !learningProgress?.dismissedAt && !learningProgress?.completedAt ? (
+                <LearningWelcomeCard
+                  guideHref={getLearningGuidePath(learningGuideKey)}
+                  tourHref={`${getDefaultRouteForRole(session.role)}?tour=intro`}
+                  guideTitle={learningGuides[learningGuideKey].audience}
+                />
+              ) : null}
+              {children}
+            </main>
           </div>
         </div>
+        {session ? <LearningTour role={session.role} /> : null}
       </body>
     </html>
   )
