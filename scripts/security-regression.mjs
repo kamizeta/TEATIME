@@ -26,11 +26,18 @@ async function getJson(path, cookie) {
 }
 
 async function main() {
-  const protectedPaths = ['/api/classes', '/api/reports/attendance/export', '/api/reports/packages/export']
-  for (const path of protectedPaths) {
-    const { response } = await getJson(path)
-    assert(response.status === 401, `Ruta pública inesperada: ${path} devolvió ${response.status}`)
-    console.log(`OK 401 ${path}`)
+  const protectedPaths = [
+    { path: '/api/classes', method: 'GET', expectedStatus: 401 },
+    { path: '/api/reports/attendance/export', method: 'GET', expectedStatus: 401 },
+    { path: '/api/reports/packages/export', method: 'GET', expectedStatus: 401 },
+    { path: '/api/jobs/meet-sync', method: 'POST', expectedStatus: 403 },
+  ]
+  for (const item of protectedPaths) {
+    const response = item.method === 'POST'
+      ? await fetch(`${baseUrl}${item.path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      : (await getJson(item.path)).response
+    assert(response.status === item.expectedStatus, `Ruta pública inesperada: ${item.path} devolvió ${response.status}`)
+    console.log(`OK ${item.expectedStatus} ${item.path}`)
   }
 
   const ownerCookie = await login(ownerTeacherEmail)
@@ -48,6 +55,16 @@ async function main() {
 
   const target = owner.body.events.find((event) => event.enrollments.length)
   assert(target, 'No hay clase con matrícula para verificar acceso cruzado de asistencia')
+  const packageId = target.enrollments[0].packageId
+  const packageRead = await getJson(`/api/packages/${packageId}/adjust`)
+  assert(packageRead.response.status === 401, `Un paquete fue expuesto sin sesión: ${packageRead.response.status}`)
+  const packageMutation = await fetch(`${baseUrl}/api/packages/${packageId}/adjust`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ usedHours: 0 }),
+  })
+  assert(packageMutation.status === 401, `Un saldo pudo alterarse sin sesión: ${packageMutation.status}`)
+  console.log('OK paquete protegido y ledger no alterable por HTTP')
   const attendance = await fetch(`${baseUrl}/api/classes/${target.id}/attendance`, {
     method: 'PATCH',
     headers: { cookie: otherTeacherCookie, 'Content-Type': 'application/json' },

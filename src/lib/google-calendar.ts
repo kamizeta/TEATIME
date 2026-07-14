@@ -14,7 +14,11 @@ type GoogleTokenResponse = {
   refresh_token?: string
 }
 
-const GOOGLE_CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar'
+const GOOGLE_CALENDAR_SCOPE = [
+  'https://www.googleapis.com/auth/calendar',
+  'https://www.googleapis.com/auth/meetings.space.readonly',
+  'https://www.googleapis.com/auth/meetings.space.settings',
+].join(' ')
 const DRY_GOOGLE_EVENT_PREFIX = 'dry-google-event-'
 
 type GoogleClassSyncOperation = 'upsert' | 'cancel'

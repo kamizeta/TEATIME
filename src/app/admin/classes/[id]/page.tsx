@@ -9,6 +9,7 @@ import { closeClassAction } from '@/lib/actions/booking'
 import { addStudentToClassAction, rescheduleClassAction, submitCancellationAction, syncClassWithGoogleAction } from '@/lib/actions'
 import { DirtySubmitButton } from '@/components/dirty-submit-button'
 import { attendanceStatusLabels, classStatusLabels, enrollmentStatusLabels } from '@/lib/display-labels'
+import { ClassMeetSyncButton } from '@/components/class-meet-sync-button'
 
 function toDateTimeLocalValue(date: Date) {
   const year = date.getFullYear()
@@ -37,12 +38,14 @@ export default async function ClassDetail({
   params,
   searchParams,
 }: {
-  params: { id: string }
-  searchParams?: Record<string, string | string[] | undefined>
+  params: Promise<{ id: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const { id } = await params
+  const query = await searchParams
   const session = await getSession()
   const ev = await prisma.classEvent.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       enrollments: {
         include: {
@@ -76,7 +79,7 @@ export default async function ClassDetail({
     include: { student: { include: { user: true } } },
     orderBy: { validTo: 'asc' },
   })
-  const opsCode = typeof searchParams?.code === 'string' ? searchParams.code : ''
+  const opsCode = typeof query?.code === 'string' ? query.code : ''
   const isCanceled = ev.status === 'CANCELED'
   const isCompleted = ev.status === 'COMPLETED'
 
@@ -94,32 +97,33 @@ export default async function ClassDetail({
           <span className="status-pill">Tipo: {ev.classType === 'GROUP' ? 'Grupal' : '1:1'}</span>
         </div>
         {!isCanceled ? (
-          <div className="toolbar">
-            <Link href={`/admin/classes/${ev.id}/attendance`} className="button-primary">
-              {isCompleted ? 'Ver asistencia' : 'Registrar asistencia'}
-            </Link>
+        <div className="toolbar">
+          <Link href={`/admin/classes/${ev.id}/attendance`} className="button-primary">
+            {isCompleted ? 'Ver asistencia' : 'Registrar asistencia'}
+          </Link>
+          <Link href={`/classes/${ev.id}/history`} className="button-ghost">Historial, transcripción e informe</Link>
           </div>
         ) : null}
       </section>
 
-      {searchParams?.cancel === 'ok' ? (
+      {query?.cancel === 'ok' ? (
         <p className="status-success">
-          Cancelación procesada. {searchParams?.override === '1' ? 'Se aplicó override operativo.' : 'Saldo liberado según regla.'}
+          Cancelación procesada. {query?.override === '1' ? 'Se aplicó override operativo.' : 'Saldo liberado según regla.'}
         </p>
       ) : null}
-      {searchParams?.cancel === 'denied' ? (
+      {query?.cancel === 'denied' ? (
         <p className="status-warning">
-          Cancelación rechazada. La ventana mínima es de {searchParams?.hours || '6'} horas para alumno o profesor.
+          Cancelación rechazada. La ventana mínima es de {query?.hours || '6'} horas para alumno o profesor.
         </p>
       ) : null}
-      {searchParams?.cancel === 'already' ? (
+      {query?.cancel === 'already' ? (
         <p className="status-success">La clase ya estaba cancelada. No se aplicaron cambios adicionales.</p>
       ) : null}
-      {searchParams?.ops === 'rescheduled' ? <p className="status-success">Clase reagendada y reservas ajustadas.</p> : null}
-      {searchParams?.ops === 'student_added' ? <p className="status-success">Alumno agregado a la clase grupal y saldo reservado.</p> : null}
-      {searchParams?.ops === 'google_synced' ? <p className="status-success">Clase sincronizada con Google Calendar/Meet.</p> : null}
-      {searchParams?.ops === 'google_failed' ? <p className="status-warning">No se pudo sincronizar con Google Calendar. Revisa ajustes o eventos de sync.</p> : null}
-      {searchParams?.ops === 'error' ? <p className="status-warning">{getOpsErrorMessage(opsCode)}</p> : null}
+      {query?.ops === 'rescheduled' ? <p className="status-success">Clase reagendada y reservas ajustadas.</p> : null}
+      {query?.ops === 'student_added' ? <p className="status-success">Alumno agregado a la clase grupal y saldo reservado.</p> : null}
+      {query?.ops === 'google_synced' ? <p className="status-success">Clase sincronizada con Google Calendar/Meet.</p> : null}
+      {query?.ops === 'google_failed' ? <p className="status-warning">No se pudo sincronizar con Google Calendar. Revisa ajustes o eventos de sync.</p> : null}
+      {query?.ops === 'error' ? <p className="status-warning">{getOpsErrorMessage(opsCode)}</p> : null}
 
       <div className="class-detail-workspace">
         <div className="class-detail-primary">
@@ -210,6 +214,7 @@ export default async function ClassDetail({
                   <button type="submit" className="button-link">Sincronizar Google / Meet</button>
                 </form>
               ) : null}
+              {!isCanceled ? <ClassMeetSyncButton classId={ev.id} /> : null}
               <form action={closeClassAction}>
                 <input type="hidden" name="classId" value={ev.id} />
                 <button type="submit" className="button-ghost" disabled={isCompleted || isCanceled || ev.endAt.getTime() > Date.now()}>Cerrar clase y procesar saldo</button>

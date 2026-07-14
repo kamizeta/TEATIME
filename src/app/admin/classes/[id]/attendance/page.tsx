@@ -4,9 +4,10 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import AttendanceClient from './attendance-client'
 
-export default async function AttendancePage({ params }: { params: { id: string } }) {
+export default async function AttendancePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const classEvent = await prisma.classEvent.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       enrollments: {
         include: {

@@ -36,8 +36,8 @@ export default async function AdminSettings({
         <p className="eyebrow">Ajustes operativos</p>
         <h1 className="page-title">Google Calendar, políticas y cuenta activa</h1>
         <p className="page-lead">
-          Aquí conectas tu cuenta de prueba hoy y luego reemplazas por la cuenta oficial de `teatimeacademy.com`
-          sin tocar el código.
+          Conecta aquí el calendario que crea las clases, los invitados y los enlaces de Google Meet. Las credenciales
+          técnicas están protegidas: el administrador solo autoriza la cuenta y escoge el calendario.
         </p>
       </section>
 
@@ -78,14 +78,28 @@ export default async function AdminSettings({
               <span>{googleState.calendarName || googleState.calendarId || 'Sin calendario seleccionado'}</span>
             </div>
           </div>
-          <p className="hint">
-            En pruebas puedes conectar tu cuenta. Luego cambias el calendario o reconectas con la cuenta oficial
-            desde la misma pantalla.
+          <p className="status-warning">
+            <strong>Estos datos son de solo lectura.</strong> OAuth y Cuenta actual confirman qué cuenta autorizó Google;
+            no se escriben manualmente por seguridad.
           </p>
+          <div className="settings-list">
+            <div className="settings-row">
+              <strong>1. Autoriza Google</strong>
+              <span>Usa el botón naranja y acepta los permisos.</span>
+            </div>
+            <div className="settings-row">
+              <strong>2. Elige el calendario</strong>
+              <span>Después de regresar, selecciónalo en Configuración editable.</span>
+            </div>
+            <div className="settings-row">
+              <strong>3. Guarda y sincroniza</strong>
+              <span>Las clases nuevas quedarán conectadas a Calendar y Meet.</span>
+            </div>
+          </div>
           <div className="inline-actions">
             {canEdit ? (
-              <Link href="/api/integrations/google/connect" className="button-link">
-                Conectar o reconectar Google
+              <Link href="/api/integrations/google/connect" className="button-primary">
+                {googleState.refreshTokenPresent ? 'Cambiar cuenta de Google' : 'Conectar calendario de Google'}
               </Link>
             ) : null}
             <Link href="/admin/calendar" className="button-ghost">
@@ -115,8 +129,13 @@ export default async function AdminSettings({
             </div>
 
             <div className="stack-xs">
-              <label htmlFor="calendarId">ID del calendario activo</label>
-              {googleState.calendars.length ? (
+              <label htmlFor="calendarId">Calendario que usará TEATIME</label>
+              {!googleState.refreshTokenPresent ? (
+                <p className="status-warning">
+                  Primero completa el paso 1: conecta la cuenta Google. Al volver, aquí aparecerá la lista de calendarios
+                  disponibles.
+                </p>
+              ) : googleState.calendars.length ? (
                 <select
                   id="calendarId"
                   name="calendarId"
@@ -141,7 +160,9 @@ export default async function AdminSettings({
                   disabled={!canEdit}
                 />
               )}
-              <p className="hint">Aquí dejas el calendario de pruebas hoy y luego cambias al oficial sin tocar código.</p>
+              <p className="hint">
+                Puedes usar un calendario de pruebas hoy y luego repetir el paso 1 con la cuenta oficial, sin tocar código.
+              </p>
             </div>
 
             <div className="stack-xs">

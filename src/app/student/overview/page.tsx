@@ -112,6 +112,7 @@ export default async function StudentOverview({
                   <td>{classStatusLabels[row.classEvent.status] || row.classEvent.status}</td>
                   <td>{row.attendance?.status ? attendanceLabels[row.attendance.status] || row.attendance.status : 'Pendiente'}</td>
                   <td>
+                    <Link href={`/classes/${row.classEventId}/history`} className="text-link">Ver historial</Link>
                     {row.status !== 'CONFIRMED' || row.classEvent.status === 'CANCELED' || row.classEvent.status === 'COMPLETED' ? (
                       <span className="muted">Sin acción</span>
                     ) : (

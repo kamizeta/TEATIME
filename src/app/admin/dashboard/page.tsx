@@ -34,7 +34,6 @@ export default async function AdminDashboard({
     where: { startAt: { gte: start, lte: end } },
   })
 
-  const pending = await prisma.attendanceRecord.count({ where: { status: 'no_show' } })
   const openIncidents = await prisma.incident.count({ where: { status: { in: ['OPEN', 'IN_REVIEW'] } } })
   const pendingNotifications = await prisma.notificationAttempt.count({ where: { status: { in: ['PENDING', 'RETRY'] } } })
   const overdueCrm = await prisma.crmActivity.count({
@@ -142,10 +141,6 @@ export default async function AdminDashboard({
           <span className="muted">Clases hoy</span>
           <strong>{todayCount}</strong>
         </article>
-        <article className="kpi-card">
-          <span className="muted">Casos pendientes</span>
-          <strong>{pending + openIncidents + pendingNotifications + overdueCrm + pastClassesWithoutTeacherClose}</strong>
-        </article>
       </section>
 
       <section className="kpi-grid">
@@ -156,10 +151,6 @@ export default async function AdminDashboard({
         <article className="kpi-card">
           <span className="muted">Paquetes por vencer 7d</span>
           <strong>{packagesExpiringSoon}</strong>
-        </article>
-        <article className="kpi-card">
-          <span className="muted">Cancelaciones rechazadas</span>
-          <strong>{recentDeniedCancellations.length}</strong>
         </article>
       </section>
 

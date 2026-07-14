@@ -15,11 +15,12 @@ const statusLabels: Record<string, string> = {
   CANCELED: 'Cancelada',
 }
 
-export default async function AdminTeacherDetailPage({ params }: { params: { id: string } }) {
+export default async function AdminTeacherDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const session = await requireRole(['ADMIN', 'STAFF'])
   const now = new Date()
   const teacher = await prisma.teacher.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       user: true,
       studentAssignments: {

@@ -29,6 +29,11 @@ try {
   await admin.$executeRawUnsafe(`CREATE DATABASE "${databaseName}"`)
   run('npx', ['prisma', 'migrate', 'deploy'])
   run('./node_modules/.bin/tsx', ['scripts/domain-regression.mts'])
+  run('./node_modules/.bin/tsx', ['scripts/meet-automation-regression.mts'], {
+    GOOGLE_DRY_RUN: 'false',
+    GOOGLE_CLIENT_ID: 'test-google-client',
+    GOOGLE_CLIENT_SECRET: 'test-google-secret',
+  })
   console.log(`Prueba de dominio completada en ${databaseName}`)
 } finally {
   await admin.$disconnect()

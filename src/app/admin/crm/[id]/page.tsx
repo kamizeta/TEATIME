@@ -69,15 +69,17 @@ export default async function CrmContactDetailPage({
   params,
   searchParams,
 }: {
-  params: { id: string }
-  searchParams?: Record<string, string | string[] | undefined>
+  params: Promise<{ id: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const { id } = await params
+  const query = await searchParams
   const session = await getSession()
   if (!session) redirect('/login')
   if (session.role !== 'ADMIN' && session.role !== 'STAFF') redirect('/')
 
   const contact = await prisma.crmContact.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       owner: { select: { name: true, email: true } },
       convertedStudent: { include: { user: true } },
@@ -96,8 +98,8 @@ export default async function CrmContactDetailPage({
 
   const nextYear = new Date()
   nextYear.setFullYear(nextYear.getFullYear() + 1)
-  const crmStatus = typeof searchParams?.crm === 'string' ? searchParams.crm : ''
-  const crmCode = typeof searchParams?.code === 'string' ? searchParams.code : ''
+  const crmStatus = typeof query?.crm === 'string' ? query.crm : ''
+  const crmCode = typeof query?.code === 'string' ? query.code : ''
 
   return (
     <div className="page-stack">
@@ -123,7 +125,7 @@ export default async function CrmContactDetailPage({
       {crmStatus === 'activity_created' ? <p className="status-success">Actividad creada.</p> : null}
       {crmStatus === 'activity_completed' ? <p className="status-success">Actividad completada.</p> : null}
       {crmStatus === 'updated' ? <p className="status-success">Contacto actualizado.</p> : null}
-      {searchParams?.notification === 'created' ? <p className="status-success">Mensaje agregado a la cola.</p> : null}
+      {query?.notification === 'created' ? <p className="status-success">Mensaje agregado a la cola.</p> : null}
       {crmStatus === 'error' ? <p className="status-warning">{getCrmMessage(crmCode)}</p> : null}
 
       <div className="settings-grid">

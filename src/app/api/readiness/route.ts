@@ -7,6 +7,18 @@ function check(name: string, ok: boolean, detail: string) {
   return { name, ok, detail }
 }
 
+function hasSecret(name: string, minimumLength = 32) {
+  return Boolean(process.env[name] && process.env[name]!.length >= minimumLength)
+}
+
+function hasEncryptionKey() {
+  try {
+    return Buffer.from(process.env.APP_ENCRYPTION_KEY || '', 'base64').length === 32
+  } catch {
+    return false
+  }
+}
+
 export async function GET() {
   const checks = []
 
@@ -26,6 +38,11 @@ export async function GET() {
     )
   )
   checks.push(check('app_base_url', Boolean(process.env.APP_BASE_URL), 'APP_BASE_URL configured'))
+  checks.push(check('app_encryption_key', hasEncryptionKey(), 'APP_ENCRYPTION_KEY is a valid 32-byte key'))
+  checks.push(check('slot_token_secret', hasSecret('SLOT_TOKEN_SECRET'), 'SLOT_TOKEN_SECRET configured'))
+  checks.push(check('rate_limit_pepper', hasSecret('RATE_LIMIT_PEPPER'), 'RATE_LIMIT_PEPPER configured'))
+  checks.push(check('cron_secret', hasSecret('CRON_SECRET'), 'CRON_SECRET configured'))
+  checks.push(check('access_test_mode', process.env.ACCESS_TEST_MODE !== 'true', 'ACCESS_TEST_MODE must be disabled'))
   checks.push(
     check(
       'google_oauth',
@@ -35,6 +52,7 @@ export async function GET() {
         : 'Google OAuth credentials configured'
     )
   )
+  checks.push(check('google_live_mode', process.env.GOOGLE_DRY_RUN === 'false', 'GOOGLE_DRY_RUN must be false'))
   checks.push(
     check(
       'whatsapp',

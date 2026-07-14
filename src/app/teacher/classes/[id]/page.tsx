@@ -12,7 +12,8 @@ const statusLabels: Record<string, string> = {
   CANCELED: 'Cancelada',
 }
 
-export default async function TeacherClassDetailPage({ params }: { params: { id: string } }) {
+export default async function TeacherClassDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const session = await getSession()
   if (!session) redirect('/login')
   if (session.role !== 'TEACHER') redirect('/')
@@ -21,7 +22,7 @@ export default async function TeacherClassDetailPage({ params }: { params: { id:
   if (!teacher) notFound()
 
   const classEvent = await prisma.classEvent.findFirst({
-    where: { id: params.id, teacherId: teacher.id },
+    where: { id, teacherId: teacher.id },
     include: {
       enrollments: {
         include: {
@@ -52,6 +53,7 @@ export default async function TeacherClassDetailPage({ params }: { params: { id:
         <p className="page-lead">{schedule} · {classEvent.durationMinutes} min · {classEvent.classType === 'GROUP' ? 'Grupal' : '1:1'}</p>
         <div className="toolbar">
           <span className="status-pill">{statusLabels[classEvent.status] || classEvent.status}</span>
+          <Link href={`/classes/${classEvent.id}/history`} className="button-ghost">Historial e informe</Link>
           {classEvent.meetUrl ? (
             <a href={classEvent.meetUrl} target="_blank" rel="noreferrer" className="button-primary">Conectarse por Google Meet</a>
           ) : null}

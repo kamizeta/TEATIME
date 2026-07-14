@@ -121,6 +121,35 @@ enum MessageTemplateChannel {
   IN_APP
 }
 
+enum LegalDocumentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  TRANSCRIPTION_CONSENT
+}
+
+enum MeetEvidenceStatus {
+  PENDING
+  EVIDENCE_FOUND
+  AUTO_CLOSED
+  NEEDS_REVIEW
+  FAILED
+}
+
+enum TranscriptStatus {
+  NOT_REQUESTED
+  PENDING
+  READY
+  CONSENT_MISSING
+  FAILED
+}
+
+enum LearningReportStatus {
+  PENDING
+  READY
+  WAITING_AI
+  FAILED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -152,6 +181,7 @@ model User {
   staffPermission       StaffPermission?
   messageTemplates      MessageTemplate[]          @relation("MessageTemplateUpdatedBy")
   accessTokens          AccessToken[]
+  legalConsents         LegalConsent[]
 }
 
 model AccessToken {
@@ -306,6 +336,10 @@ model ClassEvent {
   cancellations        Cancellation[]
   bookedBy             User?                 @relation("ClassBookedBy", fields: [bookedById], references: [id], onDelete: SetNull)
   incidents            Incident[]
+  meetEvidence         ClassMeetEvidence?
+  transcript           ClassTranscript?
+  learningReport       ClassLearningReport?
+  transcriptionRequested Boolean @default(true)
 
   @@index([teacherId, startAt, endAt])
   @@index([status, startAt])
@@ -428,6 +462,84 @@ model InstructorAttendance {
 
   classEvent ClassEvent @relation(fields: [classEventId], references: [id], onDelete: Cascade)
   instructor User       @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+}
+
+model LegalConsent {
+  id        String            @id @default(cuid())
+  userId    String
+  document  LegalDocumentType
+  version   String
+  granted   Boolean
+  source    String            @default("PORTAL")
+  ipHash    String?
+  userAgentHash String?
+  acceptedAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, document, version])
+  @@index([userId, document, granted])
+}
+
+model ClassMeetEvidence {
+  id                    String             @id @default(cuid())
+  classEventId          String             @unique
+  conferenceRecordName  String?            @unique
+  meetingCode           String?
+  status                MeetEvidenceStatus @default(PENDING)
+  conferenceStartedAt   DateTime?
+  conferenceEndedAt     DateTime?
+  observedMinutes       Int                @default(0)
+  participantCount      Int                @default(0)
+  teacherEvidence       Boolean            @default(false)
+  autoClosedAt          DateTime?
+  exceptionReason       String?
+  rawPayload            String?
+  lastSyncedAt          DateTime           @default(now())
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  classEvent ClassEvent @relation(fields: [classEventId], references: [id], onDelete: Cascade)
+}
+
+model ClassTranscript {
+  id                    String           @id @default(cuid())
+  classEventId          String           @unique
+  googleTranscriptName  String?          @unique
+  googleDriveUrl        String?
+  status                TranscriptStatus @default(NOT_REQUESTED)
+  languageCode          String?
+  transcriptText        String?
+  retentionDeleteAt     DateTime?
+  shareWithStudent      Boolean          @default(true)
+  shareWithTeacher      Boolean          @default(true)
+  lastSyncedAt          DateTime?
+  errorMessage          String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  classEvent ClassEvent @relation(fields: [classEventId], references: [id], onDelete: Cascade)
+}
+
+model ClassLearningReport {
+  id                    String               @id @default(cuid())
+  classEventId          String               @unique
+  status                LearningReportStatus @default(PENDING)
+  studentSummary        String?
+  topicsJson            String?
+  vocabularyJson        String?
+  correctionsJson       String?
+  homework              String?
+  nextClassPlan         String?
+  teacherInternalNotes  String?
+  provider              String?
+  model                 String?
+  errorMessage          String?
+  generatedAt           DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  classEvent ClassEvent @relation(fields: [classEventId], references: [id], onDelete: Cascade)
 }
 
 model Cancellation {

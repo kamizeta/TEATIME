@@ -419,6 +419,69 @@ h3 {
   white-space: pre-wrap;
 }
 
+.consent-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(242, 245, 248, 0.64);
+  color: var(--secondary);
+  line-height: 1.45;
+}
+
+.consent-option input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--brand);
+}
+
+.legal-page {
+  width: min(920px, 100%);
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 56px);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.legal-page h1 {
+  margin: 8px 0 20px;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+}
+
+.legal-page h2 {
+  margin-top: 28px;
+  font-size: 1.18rem;
+}
+
+.legal-page p,
+.legal-copy p,
+.legal-copy li {
+  color: var(--secondary);
+  line-height: 1.65;
+}
+
+.legal-copy h3 {
+  margin-top: 20px;
+  font-size: 1rem;
+}
+
+.transcript-view {
+  max-height: 640px;
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #f7fafc;
+  color: var(--secondary);
+  font: 0.86rem/1.55 Roboto, sans-serif;
+  white-space: pre-wrap;
+}
+
 .eyebrow {
   margin: 0;
   color: var(--brand);
