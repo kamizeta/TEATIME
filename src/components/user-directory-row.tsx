@@ -143,15 +143,17 @@ export function UserDirectoryRow({ user, roleLabel }: UserDirectoryRowProps) {
         ) : <span className="block-muted">No aplica</span>}
       </td>
       <td className="user-directory-action">
-        <ActionIconButton
-          form={userFormId}
-          type="submit"
-          disabled={!hasUserChanges}
-          icon="save"
-          label="Guardar cambios de usuario"
-          tone={hasUserChanges ? 'primary' : 'default'}
-        />
-        <UserAccessActions userId={user.id} role={user.role} />
+        <div className="action-icon-group">
+          <ActionIconButton
+            form={userFormId}
+            type="submit"
+            disabled={!hasUserChanges}
+            icon="save"
+            label="Guardar cambios de usuario"
+            tone={hasUserChanges ? 'primary' : 'default'}
+          />
+          <UserAccessActions userId={user.id} role={user.role} />
+        </div>
       </td>
     </tr>
   )
