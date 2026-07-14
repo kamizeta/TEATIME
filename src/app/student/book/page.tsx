@@ -4,9 +4,28 @@ import { getSession } from '@/lib/auth'
 import { formatPackageProgress, getPackageProgress, listBookableSlotsForStudent } from '@/lib/booking'
 import { StudentBookingSlots } from '@/components/student-booking-slots'
 
-export default async function StudentBookingPage() {
+const bookingMessages: Record<string, string> = {
+  SLOT_NO_LONGER_AVAILABLE: 'Este cupo ya no est\\u00e1 disponible. Actualizamos los espacios para que elijas otro.',
+  SLOT_ALREADY_TAKEN: 'Otro usuario reserv\\u00f3 este cupo antes. Elige uno de los espacios actualizados.',
+  GROUP_CLASS_FULL: 'El cupo de esta clase grupal se acaba de llenar. Elige otro horario.',
+  SLOT_TOKEN_EXPIRED: 'La disponibilidad se actualiz\\u00f3. Elige nuevamente un horario disponible.',
+  SLOT_OUTSIDE_BOOKING_WINDOW: 'Este horario ya no cumple la anticipaci\\u00f3n m\\u00ednima de reserva.',
+  INSUFFICIENT_PACKAGE_BALANCE: 'No tienes horas suficientes disponibles para reservar esta clase.',
+}
+
+export default async function StudentBookingPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
   const session = await getSession()
   if (!session || session.role !== 'STUDENT') return <p>Sin sesión</p>
+
+  const params = searchParams ? await searchParams : {}
+  const errorCode = typeof params.code === 'string' ? params.code : ''
+  const bookingError = params.booking === 'error'
+    ? bookingMessages[errorCode] ?? 'No fue posible reservar este cupo. Actualizamos la disponibilidad para que intentes nuevamente.'
+    : null
 
   const { context, slots } = await listBookableSlotsForStudent(session.userId)
   if (!context) return <p>No encontramos profesor asignado o paquete activo para esta cuenta.</p>
@@ -34,6 +53,7 @@ export default async function StudentBookingPage() {
           <h2>Reserva guiada del alumno</h2>
         </div>
         <div className="stack-md">
+          {bookingError ? <p className="booking-error-notice" role="alert">{bookingError}</p> : null}
           <div className="metric-row">
             <span className="status-pill">Profesor asignado: {context.teacher.userName}</span>
             <span className="status-pill">Estado actual: {formatPackageProgress(context.package.totalMinutes, context.package.usedMinutes, context.package.reservedMinutes)}</span>

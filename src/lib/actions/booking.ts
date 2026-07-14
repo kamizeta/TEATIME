@@ -80,13 +80,19 @@ export async function deactivateAvailabilityBlockAction(formData: FormData) {
 export async function bookSlotAction(formData: FormData) {
   const session = await requireRole(['STUDENT'])
   const slotToken = String(formData.get('slotToken') || '')
-  if (!slotToken) throw new Error('MISSING_SLOT_TOKEN')
+  if (!slotToken) redirect('/student/book?booking=error&code=MISSING_SLOT_TOKEN')
 
-  await createBookingForStudent(session.userId, slotToken)
+  try {
+    await createBookingForStudent(session.userId, slotToken)
+  } catch (error) {
+    const code = error instanceof Error ? error.message : 'BOOKING_FAILED'
+    redirect('/student/book?booking=error&code=' + encodeURIComponent(code))
+  }
   revalidatePath('/student/book')
   revalidatePath('/student/home')
   revalidatePath('/teacher/today')
   revalidatePath('/admin/dashboard')
+  redirect('/student/home?booking=created')
 }
 
 export async function closeClassAction(formData: FormData) {

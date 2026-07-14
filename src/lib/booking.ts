@@ -108,10 +108,47 @@ function addDays(date: Date, days: number) {
   return copy
 }
 
-function setTime(date: Date, minutesFromMidnight: number) {
-  const copy = startOfDay(date)
-  copy.setMinutes(minutesFromMidnight)
-  return copy
+function getZonedDateParts(date: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day),
+    hour: Number(values.hour),
+    minute: Number(values.minute),
+    second: Number(values.second),
+  }
+}
+
+function getTeacherCalendarDay(date: Date, timezone: string) {
+  const local = getZonedDateParts(date, timezone)
+  return new Date(Date.UTC(local.year, local.month - 1, local.day))
+}
+
+function zonedDateTimeToUtc(day: Date, minutesFromMidnight: number, timezone: string) {
+  const year = day.getUTCFullYear()
+  const month = day.getUTCMonth()
+  const date = day.getUTCDate()
+  const hour = Math.floor(minutesFromMidnight / 60)
+  const minute = minutesFromMidnight % 60
+  const utcGuess = Date.UTC(year, month, date, hour, minute, 0)
+  const getOffset = (instant: Date) => {
+    const local = getZonedDateParts(instant, timezone)
+    return Date.UTC(local.year, local.month - 1, local.day, local.hour, local.minute, local.second) - instant.getTime()
+  }
+  let timestamp = utcGuess - getOffset(new Date(utcGuess))
+  timestamp = utcGuess - getOffset(new Date(timestamp))
+  return new Date(timestamp)
 }
 
 function getTeacherLocalTime(date: Date, timezone: string) {
@@ -300,8 +337,10 @@ export async function listBookableSlotsForStudent(userId: string, daysAhead = 14
     orderBy: [{ weekday: 'asc' }, { startLocalTime: 'asc' }],
   })
 
-  const rangeStart = startOfDay(new Date())
-  const rangeEnd = endOfDay(addDays(rangeStart, daysAhead))
+  const rangeStartDay = getTeacherCalendarDay(new Date(), context.teacher.timezone)
+  const rangeEndDay = addDays(rangeStartDay, daysAhead)
+  const rangeStart = zonedDateTimeToUtc(rangeStartDay, 0, context.teacher.timezone)
+  const rangeEnd = zonedDateTimeToUtc(rangeEndDay, 23 * 60 + 59, context.teacher.timezone)
 
   const [exceptions, existingClasses] = await Promise.all([
     prisma.teacherAvailabilityException.findMany({
@@ -326,8 +365,8 @@ export async function listBookableSlotsForStudent(userId: string, daysAhead = 14
   const slots: BookableSlot[] = []
 
   for (let dayOffset = 0; dayOffset <= daysAhead; dayOffset += 1) {
-    const currentDay = addDays(rangeStart, dayOffset)
-    const weekday = currentDay.getDay()
+    const currentDay = addDays(rangeStartDay, dayOffset)
+    const weekday = currentDay.getUTCDay()
     const dayBlocks = blocks.filter((block) => block.weekday === weekday)
 
     for (const block of dayBlocks) {
@@ -343,7 +382,7 @@ export async function listBookableSlotsForStudent(userId: string, daysAhead = 14
         cursorMinutes + block.durationMinutes <= blockEndMinutes;
         cursorMinutes += block.durationMinutes
       ) {
-        const startAt = setTime(currentDay, cursorMinutes)
+        const startAt = zonedDateTimeToUtc(currentDay, cursorMinutes, context.teacher.timezone)
         const endAt = new Date(startAt.getTime() + block.durationMinutes * 60_000)
 
         const hoursUntilStart = (startAt.getTime() - now.getTime()) / 3_600_000
