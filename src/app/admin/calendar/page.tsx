@@ -44,14 +44,15 @@ function calendarHref(week: string, view: string, teacher: string, status: strin
 export default async function AdminCalendarPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
   await requireRole(['ADMIN', 'STAFF'])
+  const params = searchParams ? await searchParams : {}
 
-  const requestedDate = typeof searchParams?.week === 'string' && searchParams.week ? new Date(`${searchParams.week}T00:00:00`) : new Date()
-  const teacherFilter = typeof searchParams?.teacher === 'string' ? searchParams.teacher : ''
-  const statusFilter = typeof searchParams?.status === 'string' ? searchParams.status : ''
-  const view = searchParams?.view === 'list' ? 'list' : 'calendar'
+  const requestedDate = typeof params.week === 'string' && params.week ? new Date(`${params.week}T00:00:00`) : new Date()
+  const teacherFilter = typeof params.teacher === 'string' ? params.teacher : ''
+  const statusFilter = typeof params.status === 'string' ? params.status : ''
+  const view = params.view === 'list' ? 'list' : 'calendar'
   const weekStart = startOfWeek(isNaN(requestedDate.getTime()) ? new Date() : requestedDate)
   const weekEnd = endOfWeek(weekStart)
 

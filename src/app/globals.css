@@ -893,6 +893,9 @@ h3 {
 }
 
 .week-today-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 34px;
   padding: 0 11px;
   border: 1px solid rgba(234, 84, 52, 0.24);
@@ -903,6 +906,7 @@ h3 {
   font: inherit;
   font-size: 0.78rem;
   font-weight: 800;
+  text-decoration: none;
 }
 
 .week-nav-button {
@@ -917,6 +921,7 @@ h3 {
   cursor: pointer;
   font-size: 1.25rem;
   font-weight: 800;
+  text-decoration: none;
 }
 
 .week-nav-button:hover,

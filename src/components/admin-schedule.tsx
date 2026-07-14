@@ -83,10 +83,10 @@ export function AdminSchedule({ classes, weekStart, initialView, previousHref, n
         </div>
         <div className="teacher-schedule-controls">
           <div className="week-navigator" aria-label="Navegación semanal">
-            <Link href={previousHref} className="week-nav-button" aria-label="Semana anterior" title="Semana anterior">←</Link>
+            <a href={previousHref} className="week-nav-button" aria-label="Semana anterior" title="Semana anterior">←</a>
             <strong>{formatWeekRange(weekDays)}</strong>
-            <Link href={nextHref} className="week-nav-button" aria-label="Semana siguiente" title="Semana siguiente">→</Link>
-            <Link href={todayHref} className="week-today-button">Volver a hoy</Link>
+            <a href={nextHref} className="week-nav-button" aria-label="Semana siguiente" title="Semana siguiente">→</a>
+            <a href={todayHref} className="week-today-button">Volver a hoy</a>
           </div>
           <div className="schedule-view-toggle" aria-label="Vista de agenda">
             <button type="button" className={view === 'list' ? 'is-active' : ''} onClick={() => changeView('list')}>Lista</button>
