@@ -1,0 +1,8 @@
+[Unit]
+Description=TEATIME Ops PostgreSQL backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/teatime-db-backup
