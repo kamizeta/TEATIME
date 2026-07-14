@@ -19,17 +19,25 @@ const AvailabilitySchema = z.object({
 
 export async function saveAvailabilityBlockAction(formData: FormData) {
   const session = await requireRole(['TEACHER'])
-  const parsed = AvailabilitySchema.parse({
-    weekday: formData.get('weekday'),
-    startLocalTime: formData.get('startLocalTime'),
-    endLocalTime: formData.get('endLocalTime'),
-    durationMinutes: formData.get('durationMinutes'),
-    classType: formData.get('classType'),
-    capacity: formData.get('capacity'),
-  })
 
-  await createAvailabilityBlockForTeacher(session.userId, parsed)
+  try {
+    const parsed = AvailabilitySchema.parse({
+      weekday: formData.get('weekday'),
+      startLocalTime: formData.get('startLocalTime'),
+      endLocalTime: formData.get('endLocalTime'),
+      durationMinutes: formData.get('durationMinutes'),
+      classType: formData.get('classType'),
+      capacity: formData.get('capacity'),
+    })
+    await createAvailabilityBlockForTeacher(session.userId, parsed)
+  } catch (error) {
+    const code = error instanceof Error ? error.message : 'AVAILABILITY_SAVE_FAILED'
+    redirect('/teacher/availability?availability=error&code=' + encodeURIComponent(code))
+  }
+
   revalidatePath('/teacher/availability')
+  revalidatePath('/student/book')
+  redirect('/teacher/availability?availability=created')
 }
 
 export async function deactivateAvailabilityBlockAction(formData: FormData) {

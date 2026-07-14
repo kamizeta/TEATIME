@@ -7,13 +7,25 @@ import { saveAvailabilityBlockAction } from '@/lib/actions/booking'
 import { DirtySubmitButton } from '@/components/dirty-submit-button'
 import { AvailabilityDeleteButton } from '@/components/availability-delete-button'
 
+function getAvailabilityMessage(code: string) {
+  const messages: Record<string, string> = {
+    AVAILABILITY_OVERLAPS_EXISTING: 'Ya tienes un bloque activo que se cruza con este horario. Elimina o modifica el bloque existente antes de crear otro.',
+    INVALID_AVAILABILITY_RANGE: 'La hora de fin debe ser posterior a la hora de inicio.',
+  }
+  return messages[code] || 'No fue posible guardar el bloque. Revisa los datos e int\u00e9ntalo nuevamente.'
+}
+
 export default async function TeacherAvailabilityPage({
   searchParams,
 }: {
-  searchParams?: { availability?: string }
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
   const session = await getSession()
   if (!session || session.role !== 'TEACHER') return <p>Sin sesión docente</p>
+
+  const params = searchParams ? await searchParams : {}
+  const availabilityResult = typeof params.availability === 'string' ? params.availability : ''
+  const availabilityCode = typeof params.code === 'string' ? params.code : ''
 
   const teacher = await prisma.teacher.findUnique({
     where: { userId: session.userId },
@@ -43,6 +55,8 @@ export default async function TeacherAvailabilityPage({
           <p className="eyebrow">Nuevo bloque</p>
           <h2>Agregar disponibilidad</h2>
         </div>
+        {availabilityResult === 'created' ? <p className="status-success">Bloque de disponibilidad publicado.</p> : null}
+        {availabilityResult === 'error' ? <p className="status-warning">{getAvailabilityMessage(availabilityCode)}</p> : null}
         <form action={saveAvailabilityBlockAction} className="stack-md">
           <div className="kpi-grid">
             <div className="stack-xs">
@@ -100,7 +114,7 @@ export default async function TeacherAvailabilityPage({
           <p className="eyebrow">Bloques activos</p>
           <h2>Disponibilidad publicada</h2>
         </div>
-        {searchParams?.availability === 'deleted' ? (
+        {availabilityResult === 'deleted' ? (
           <p className="status-success">Bloque eliminado de las futuras reservas.</p>
         ) : null}
         {teacher.availabilityBlocks.length ? (
