@@ -21,7 +21,7 @@ export function isPortalRole(role: UserRole) {
 }
 
 export function isAccessTestMode() {
-  return process.env.ACCESS_TEST_MODE === 'true'
+  return process.env.ACCESS_TEST_MODE === 'true' && getTestGlobalPortalPassword().length >= 8
 }
 
 export function getTestGlobalPortalPassword() {
